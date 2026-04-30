@@ -1,0 +1,219 @@
+{
+    "meta": {
+      "schema_version": "1.0",
+      "resume_type": "tech",
+      "target_role": "Frontend Web Developer",
+      "ats_optimized": false
+    },
+    "personal": {
+      "full_name": "Arifhusain Soudagar",
+      "preferred_name": null,
+      "headline": null,
+      "email": "arifhusainsoudagar01@gmail.com",
+      "phone": "7358236715",
+      "location": {
+        "city": "Dharwad",
+        "state": "Karnataka",
+        "country": "India",
+        "remote_preference": null
+      },
+      "links": {
+        "linkedin": "www.linkedin.com/in/arifhusain-soudagar-b8348a273",
+        "github": null,
+        "portfolio": null,
+        "website": null,
+        "behance": null,
+        "medium": null,
+        "twitter_x": null
+      }
+    },
+    "summary": {
+      "tagline": null,
+      "body": "Highly motivated and results-oriented Frontend Developer with 8 years of experience in the IT industry. Proven expertise in React.js and a strong foundation in frontend technologies, delivering high-quality, user-centric web applications.",
+      "keywords": []
+    },
+    "skills": {
+      "technical": {
+        "languages": [],
+        "frameworks": [],
+        "databases": [],
+        "cloud_devops": [],
+        "tools": [],
+        "methodologies": []
+      },
+      "domain": {
+        "core": [],
+        "industry": [],
+        "tools": []
+      },
+      "soft": [],
+      "languages_spoken": []
+    },
+    "experience": [
+      {
+        "company": "Cognizant",
+        "company_url": null,
+        "industry": null,
+        "company_size": null,
+        "location": "India",
+        "employment_type": null,
+        "roles": [
+          {
+            "title": "Senior Associate (Lead Developer)",
+            "level": null,
+            "start_date": "2025-07",
+            "end_date": null,
+            "is_current": true,
+            "team_size": null,
+            "direct_reports": null,
+            "summary": null,
+            "achievements": [
+              {
+                "action": "Expertise",
+                "task": "Expertise in building reusable UI components and managing state effectively using React's component-based architecture.",
+                "result": null,
+                "metric": null,
+                "impact_area": null
+              },
+              {
+                "action": "Utilized",
+                "task": "Utilized MUI to expedite and streamline UI development by capitalizing on its pre-built components and customizable features",
+                "result": null,
+                "metric": null,
+                "impact_area": null
+              },
+              {
+                "action": "Facilitated",
+                "task": "Facilitated the development of flowcharts, layouts, diagrams, and code comments, ensuring clarity in coding practices for seamless project deployment and reduced errors",
+                "result": null,
+                "metric": null,
+                "impact_area": null
+              },
+              {
+                "action": "Surpassed",
+                "task": "Surpassed project expectations across multiple frontend projects, driving a 30% increase in ROI and earning Employee of the Month recognition from leadership, managers, and clients",
+                "result": null,
+                "metric": "30%",
+                "impact_area": null
+              },
+              {
+                "action": "Integrated",
+                "task": "Integrated an innovative AI study tool into eTextbooks, empowering students to access AI-driven summaries, explanations, and practice questions seamlessly within their learning materials",
+                "result": null,
+                "metric": null,
+                "impact_area": null
+              }
+            ],
+            "tech_stack": []
+          },
+          {
+            "title": "Associate - Projects",
+            "level": null,
+            "start_date": "2022-02",
+            "end_date": "2025-07",
+            "is_current": false,
+            "team_size": null,
+            "direct_reports": null,
+            "summary": null,
+            "achievements": [],
+            "tech_stack": []
+          }
+        ]
+      },
+      {
+        "company": "Accenture",
+        "company_url": null,
+        "industry": null,
+        "company_size": null,
+        "location": "Bengaluru, Karnataka, India",
+        "employment_type": null,
+        "roles": [
+          {
+            "title": "Software Engineer Analyst",
+            "level": null,
+            "start_date": "2016-07",
+            "end_date": "2022-02",
+            "is_current": false,
+            "team_size": null,
+            "direct_reports": null,
+            "summary": null,
+            "achievements": [
+              {
+                "action": "Strengthened",
+                "task": "Strengthened user engagement by 30% through the development and maintenance of user-friendly web applications using React, JavaScript, HTML, and CSS",
+                "result": null,
+                "metric": "30%",
+                "impact_area": null
+              },
+              {
+                "action": "Collaborated",
+                "task": "Collaborated with the team to construct maintainable and extensible code for client dashboard and e-commerce platform projects",
+                "result": null,
+                "metric": null,
+                "impact_area": null
+              },
+              {
+                "action": "Enhanced",
+                "task": "Enhanced conversion rates by 20% through the development of high-performance applications using React JS components, Forms, Events, React Hooks, React-Router, and styled-components for an E-commerce platform",
+                "result": null,
+                "metric": "20%",
+                "impact_area": null
+              },
+              {
+                "action": "Employed",
+                "task": "Employed advanced React State management techniques utilizing the Context API to optimize state, enhance rendering speed, and bolster scalability for large-scale applications, leading to improved project efficiency and elevated user experience",
+                "result": null,
+                "metric": null,
+                "impact_area": null
+              },
+              {
+                "action": "Utilized",
+                "task": "Utilized Django's Model-View-Template (MVT) architecture to enhance user engagement by 20% in developing e-commerce platforms",
+                "result": null,
+                "metric": "20%",
+                "impact_area": null
+              }
+            ],
+            "tech_stack": []
+          }
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "BCA, Computer Programming, Specific Applications",
+        "short": null,
+        "field": null,
+        "institution": "Karnataka University, Dharwad",
+        "location": "Dharwad",
+        "start_year": 2013,
+        "end_year": 2016,
+        "gpa": null,
+        "honors": null,
+        "relevant_courses": [],
+        "thesis": null
+      }
+    ],
+    "projects": [],
+    "certifications": [
+      {
+        "certification": "Pearson+ Hackathon Finalist",
+        "year": null
+      }
+    ],
+    "awards": [],
+    "publications": [],
+    "volunteer": [],
+    "open_source": [],
+    "speaking": [],
+    "ats_metadata": {
+      "total_yoe": null,
+      "primary_skill": null,
+      "secondary_skills": [],
+      "industries": [],
+      "job_levels": [],
+      "notice_period": null,
+      "willing_to_relocate": null,
+      "visa_status": null
+    }
+  }
