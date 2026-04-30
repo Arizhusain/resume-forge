@@ -4,34 +4,36 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AI Resume Tailor</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ── Reset + tokens (resume-json.html) ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
-  --bg:       #0C0E12;
-  --bg2:      #111318;
-  --bg3:      #181B22;
-  --border:   #252830;
-  --border2:  #2E323C;
-  --text:     #E2E6F0;
-  --text2:    #8B91A1;
-  --text3:    #555B6B;
-  --accent:   #3B82F6;
-  --accent-d: #1D4ED8;
-  --accent-g: #60A5FA;
-  --green:    #34D399;
-  --red:      #F87171;
-  --purple:   #A78BFA;
-
-  --ff-mono: 'IBM Plex Mono', 'Fira Code', monospace;
-  --ff-sans: 'IBM Plex Sans', sans-serif;
-  --radius:  10px;
-  --shadow:  0 4px 24px rgba(0,0,0,.4);
+  --bg:#07090F;
+  --bg2:#0D1017;
+  --bg3:#131720;
+  --bg4:#1A1F2E;
+  --border:#1E2436;
+  --border2:#262D40;
+  --border3:#2F3850;
+  --text:#EDF0F7;
+  --text2:#9BA3B8;
+  --text3:#525B75;
+  --accent:#4F6EF7;
+  --accent2:#3B55E0;
+  --accent-glow:rgba(79,110,247,0.18);
+  --accent-glow2:rgba(79,110,247,0.08);
+  --green:#2DD4A7;
+  --green-bg:rgba(45,212,167,0.08);
+  --red:#F06C6C;
+  --amber:#F5A623;
+  --purple:#9B7EF8;
+  --ff-sans:'Inter',sans-serif;
+  --ff-mono:'JetBrains Mono',monospace;
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-lg:16px;
 }
 
 html{scroll-behavior:smooth}
@@ -43,307 +45,520 @@ body{
   overflow-x:hidden;
 }
 
+/* Subtle grid bg */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.012) 2px,rgba(255,255,255,.012) 4px);
+  background-image:
+    linear-gradient(rgba(79,110,247,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(79,110,247,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+/* Radial glow top center */
+body::after{
+  content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);
+  width:800px;height:500px;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse,rgba(79,110,247,0.07) 0%,transparent 70%);
 }
 
 .container{
   position:relative;z-index:1;
-  max-width:900px;margin:0 auto;
-  padding:44px 24px 80px;
+  max-width:760px;margin:0 auto;
+  padding:56px 24px 96px;
 }
 
-h2{
-  font-family:var(--ff-mono);font-size:24px;font-weight:600;
-  color:var(--text);letter-spacing:-1px;
-  margin-bottom:8px;
-  padding-bottom:28px;
-  border-bottom:1px solid var(--border);
+/* Header */
+.header{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:40px;
+}
+.header-icon{
+  width:42px;height:42px;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 0 24px rgba(79,110,247,0.35);
+}
+.header-icon svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.header-text h1{
+  font-size:22px;font-weight:700;
+  background:linear-gradient(135deg,var(--text) 40%,var(--text2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-0.5px;
+}
+.header-text p{
+  font-size:13px;color:var(--text3);margin-top:2px;
+  font-weight:400;
 }
 
-/* Model select + fields */
-select#model{
-  width:100%;margin-top:20px;margin-bottom:16px;
-  padding:10px 12px;
-  background:var(--bg3);border:1px solid var(--border2);border-radius:7px;
-  font-family:var(--ff-mono);font-size:12px;color:var(--text);
-  outline:none;cursor:pointer;transition:border-color .15s;
-  appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23555B6B' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+/* Cards */
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  margin-bottom:16px;
+  transition:border-color .2s;
 }
-select#model:focus{border-color:var(--accent)}
+.card:focus-within{border-color:var(--border3)}
 
-input#apiKey,
-input#jobLink,
-textarea#jd,
-textarea#resume{
-  width:100%;margin-top:8px;margin-bottom:4px;
-  padding:10px 12px;
-  background:var(--bg3);border:1px solid var(--border2);border-radius:7px;
+/* Section labels */
+.label{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:14px;
+}
+.label-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  flex-shrink:0;
+}
+
+/* Model select */
+.model-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.model-btn{
+  padding:10px 8px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  font-family:var(--ff-mono);font-size:11px;font-weight:500;
+  color:var(--text3);cursor:pointer;
+  transition:all .15s;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  line-height:1;
+}
+.model-btn:hover{border-color:var(--border3);color:var(--text2);background:var(--bg4)}
+.model-btn.active{
+  border-color:var(--accent);
+  background:var(--accent-glow2);
+  color:var(--accent);
+}
+.model-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border3);
+  transition:background .15s;
+}
+.model-btn.active .model-dot{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+
+/* API Key input */
+.api-wrap{
+  position:relative;margin-top:16px;
+}
+.api-wrap input{
+  width:100%;padding:12px 44px 12px 14px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);
   font-family:var(--ff-mono);font-size:12px;color:var(--text);
   outline:none;transition:border-color .15s;
 }
-input#apiKey:focus,
-input#jobLink:focus,
-textarea#jd:focus,
-textarea#resume:focus{border-color:var(--accent)}
-input#apiKey::placeholder,
-input#jobLink::placeholder,
-textarea#jd::placeholder,
-textarea#resume::placeholder{color:var(--text3)}
+.api-wrap input:focus{border-color:var(--accent)}
+.api-wrap input::placeholder{color:var(--text3)}
+.api-lock{
+  position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  color:var(--text3);pointer-events:none;
+}
+.api-lock svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+/* Mode tabs */
+.mode-tabs{
+  display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:3px;gap:3px;margin-bottom:16px;
+}
+.mode-tab{
+  flex:1;padding:8px 10px;
+  font-family:var(--ff-mono);font-size:11px;font-weight:500;
+  background:transparent;border:none;border-radius:6px;
+  color:var(--text3);cursor:pointer;
+  transition:all .15s;letter-spacing:0.03em;
+}
+.mode-tab:hover{color:var(--text2)}
+.mode-tab.active{background:var(--bg4);color:var(--text);border:1px solid var(--border2)}
+
+/* Inputs */
+input#jobLink,
 textarea#jd,
-textarea#resume{min-height:120px;line-height:1.55;resize:vertical;margin-top:12px}
-
-#linkBox{margin-top:4px}
-
-/* Tabs — same pattern as .model-tabs / .mtab */
-.tabs{
-  display:flex;gap:1px;background:var(--border);border-radius:7px;overflow:hidden;
-  margin-top:16px;margin-bottom:12px;
-}
-.tab{
-  flex:1;padding:9px 6px;font-family:var(--ff-mono);font-size:11px;font-weight:500;
-  background:var(--bg3);color:var(--text3);border:none;cursor:pointer;
-  transition:all .15s;text-align:center;margin:0;
-}
-.tab:hover{background:var(--bg2);color:var(--text2)}
-.tab.active{background:var(--accent);color:#fff}
-
-/* Buttons — same pattern as .btn-run */
-button{
-  width:100%;margin-top:16px;padding:13px;
-  background:var(--accent);color:#fff;border:none;border-radius:8px;
-  font-family:var(--ff-mono);font-size:12px;font-weight:600;letter-spacing:.5px;
-  cursor:pointer;transition:all .18s;
-}
-button:hover:not(:disabled){background:var(--accent-d);box-shadow:0 0 20px rgba(59,130,246,.3)}
-button:disabled{opacity:.4;cursor:not-allowed}
-
-/* Output — panel feel */
-.output{
-  margin-top:24px;
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
-  padding:16px 18px;
-  white-space:pre-wrap;word-break:break-word;
-  font-family:var(--ff-mono);font-size:12px;line-height:1.75;
-  color:var(--text2);
-  max-height:70vh;overflow:auto;
-}
-
-/* Error — same pattern as .err */
-.error{
-  margin-top:14px;padding:12px 14px;
-  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);
-  border-radius:7px;font-family:var(--ff-mono);font-size:11px;color:var(--red);
+textarea#resume{
+  width:100%;padding:12px 14px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  font-family:var(--ff-mono);font-size:12px;color:var(--text);
+  outline:none;transition:border-color .15s;
   line-height:1.6;
 }
-.error:empty{display:none}
+input#jobLink:focus,textarea#jd:focus,textarea#resume:focus{border-color:var(--accent)}
+input#jobLink::placeholder,textarea#jd::placeholder,textarea#resume::placeholder{color:var(--text3)}
+textarea#jd,textarea#resume{min-height:130px;resize:vertical}
 
-/* Scrollbar (resume-json.html) */
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--bg)}
+/* Extract btn */
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:10px;padding:9px 16px;
+  background:transparent;border:1px solid var(--border2);border-radius:var(--radius-sm);
+  font-family:var(--ff-mono);font-size:11px;font-weight:500;color:var(--text2);
+  cursor:pointer;transition:all .15s;width:auto;
+  letter-spacing:0.03em;
+}
+.btn-secondary:hover{border-color:var(--border3);color:var(--text);background:var(--bg4)}
+.btn-secondary svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+
+/* Generate button */
+.btn-primary{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:var(--radius-sm);
+  font-family:var(--ff-mono);font-size:12px;font-weight:600;
+  color:#fff;cursor:pointer;
+  transition:all .2s;
+  letter-spacing:0.05em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(79,110,247,0.25);
+  margin-top:0;
+}
+.btn-primary:hover:not(:disabled){
+  transform:translateY(-1px);
+  box-shadow:0 8px 28px rgba(79,110,247,0.4);
+  background:linear-gradient(135deg,#617BF8,var(--accent));
+}
+.btn-primary:active:not(:disabled){transform:translateY(0)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-primary svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Status strip */
+.status{
+  display:none;align-items:center;gap:10px;
+  margin-top:16px;padding:12px 16px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-family:var(--ff-mono);font-size:11px;color:var(--text2);
+}
+.status.visible{display:flex}
+.spinner{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--border2);
+  border-top-color:var(--accent);
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Output panel */
+.output-wrap{
+  display:none;margin-top:16px;
+}
+.output-wrap.visible{display:block}
+.output-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.output-label{
+  font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text3);display:flex;align-items:center;gap:6px;
+}
+.output-label::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--green);flex-shrink:0;
+  box-shadow:0 0 8px var(--green);
+}
+.copy-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:transparent;border:1px solid var(--border2);border-radius:6px;
+  font-family:var(--ff-mono);font-size:10px;font-weight:500;color:var(--text3);
+  cursor:pointer;transition:all .15s;width:auto;margin-top:0;
+}
+.copy-btn:hover{border-color:var(--border3);color:var(--text2)}
+.copy-btn svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.output{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:18px;
+  white-space:pre-wrap;word-break:break-word;
+  font-family:var(--ff-mono);font-size:11.5px;line-height:1.8;
+  color:var(--text2);
+  max-height:65vh;overflow:auto;
+}
+
+/* Error */
+.error{
+  display:none;margin-top:14px;
+  padding:12px 16px;
+  background:rgba(240,108,108,0.06);border:1px solid rgba(240,108,108,0.2);
+  border-radius:var(--radius-sm);
+  font-family:var(--ff-mono);font-size:11px;color:var(--red);
+  line-height:1.6;
+  display:flex;gap:9px;align-items:flex-start;
+}
+.error.hidden{display:none!important}
+.error-icon{flex-shrink:0;margin-top:1px}
+.error-icon svg{width:13px;height:13px;fill:none;stroke:var(--red);stroke-width:2;stroke-linecap:round}
+
+/* Divider */
+.divider{
+  height:1px;background:var(--border);
+  margin:20px 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+::-webkit-scrollbar-thumb:hover{background:var(--border3)}
 </style>
 </head>
-
 <body>
 <div class="container">
 
-<h2>AI Resume Tailoring App</h2>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h6M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Resume Tailor</h1>
+      <p>Optimize your resume for any job description using AI</p>
+    </div>
+  </div>
 
-<!-- AI MODEL -->
-<select id="model">
-  <option value="openai">OpenAI</option>
-  <option value="claude">Claude</option>
-  <option value="groq">Groq</option>
-  <option value="gemini">Gemini</option>
-</select>
+  <!-- Model Selection -->
+  <div class="card">
+    <div class="label"><span class="label-dot"></span>Select Model</div>
+    <div class="model-grid">
+      <button class="model-btn active" data-model="openai" onclick="selectModel('openai',this)">
+        <span class="model-dot"></span>OpenAI
+      </button>
+      <button class="model-btn" data-model="claude" onclick="selectModel('claude',this)">
+        <span class="model-dot"></span>Claude
+      </button>
+      <button class="model-btn" data-model="groq" onclick="selectModel('groq',this)">
+        <span class="model-dot"></span>Groq
+      </button>
+      <button class="model-btn" data-model="gemini" onclick="selectModel('gemini',this)">
+        <span class="model-dot"></span>Gemini
+      </button>
+    </div>
+    <div class="api-wrap">
+      <input id="apiKey" type="password" placeholder="Paste your API key here"/>
+      <span class="api-lock">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </span>
+    </div>
+  </div>
 
-<input id="apiKey" placeholder="Enter API Key"/>
+  <!-- Job Description -->
+  <div class="card">
+    <div class="label"><span class="label-dot"></span>Job Description</div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('link',this)">From Link</button>
+      <button class="mode-tab" onclick="setMode('manual',this)">Manual Input</button>
+    </div>
 
-<!-- JD MODE -->
-<div class="tabs">
-  <div class="tab active" onclick="setMode('link',this)">Link</div>
-  <div class="tab" onclick="setMode('manual',this)">Manual</div>
+    <div id="linkBox">
+      <input id="jobLink" placeholder="https://example.com/job/senior-engineer"/>
+      <button class="btn-secondary" onclick="extractJD()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Extract Job Description
+      </button>
+    </div>
+
+    <div id="jdBox" style="display:none">
+      <textarea id="jd" rows="6" placeholder="Paste the full job description here..."></textarea>
+    </div>
+
+    <div id="jdPreview" style="display:none;margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--green);font-family:var(--ff-mono);display:flex;align-items:center;gap:5px">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+          JD Extracted
+        </span>
+        <button class="copy-btn" onclick="document.getElementById('jdBox').style.display='block';document.getElementById('jdPreview').style.display='none'">Edit</button>
+      </div>
+      <textarea id="jd" rows="6" style="display:none"></textarea>
+    </div>
+  </div>
+
+  <!-- Resume -->
+  <div class="card">
+    <div class="label"><span class="label-dot"></span>Your Resume</div>
+    <textarea id="resume" rows="7" placeholder="Paste your resume as JSON or plain text..."></textarea>
+    <div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:var(--ff-mono)">
+      Tip: JSON format produces more structured output
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="btn-primary" onclick="generate()" id="genBtn">
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Generate Tailored Resume
+  </button>
+
+  <!-- Status -->
+  <div class="status" id="status">
+    <div class="spinner"></div>
+    <span id="statusText">Processing...</span>
+  </div>
+
+  <!-- Error -->
+  <div class="error hidden" id="error">
+    <span class="error-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+    <span id="errorText"></span>
+  </div>
+
+  <!-- Output -->
+  <div class="output-wrap" id="outputWrap">
+    <div class="output-header">
+      <span class="output-label">Tailored Output</span>
+      <button class="copy-btn" onclick="copyOutput()">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <div class="output" id="output"></div>
+  </div>
+
 </div>
-
-<!-- LINK -->
-<div id="linkBox">
-  <input id="jobLink" placeholder="Paste job link"/>
-  <button onclick="extractJD()">Extract JD</button>
-</div>
-
-<!-- JD -->
-<textarea id="jd" rows="6" placeholder="Job description..." disabled></textarea>
-
-<!-- RESUME -->
-<textarea id="resume" rows="6" placeholder="Paste Resume JSON"></textarea>
-
-<button onclick="generate()">Generate Tailored Resume</button>
-
-<div class="error" id="error"></div>
-<div class="output" id="output"></div>
-
-</div>
-
 <script>
-let mode = "link";
+let mode="link";
+let selectedModel="openai";
+
+function selectModel(m,el){
+  selectedModel=m;
+  document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
 
 function setMode(m,el){
   mode=m;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-
-  document.getElementById('linkBox').style.display = m==='link'?'block':'none';
-  document.getElementById('jd').disabled = m==='link';
+  document.getElementById('linkBox').style.display=m==='link'?'block':'none';
+  document.getElementById('jdBox').style.display=m==='manual'?'block':'none';
+  document.getElementById('jdPreview').style.display='none';
 }
 
 function showError(msg){
-  document.getElementById('error').innerText = msg;
+  const el=document.getElementById('error');
+  document.getElementById('errorText').innerText=msg;
+  el.classList.remove('hidden');
 }
 
-/* ================= AI CALL ================= */
+function hideError(){
+  document.getElementById('error').classList.add('hidden');
+}
+
+function setStatus(msg){
+  const s=document.getElementById('status');
+  if(msg){
+    document.getElementById('statusText').innerText=msg;
+    s.classList.add('visible');
+  }else{
+    s.classList.remove('visible');
+  }
+}
+
+function copyOutput(){
+  const text=document.getElementById('output').innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=event.target.closest('.copy-btn');
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Copied';
+    setTimeout(()=>btn.innerHTML=orig,1800);
+  });
+}
 
 async function callAI(prompt){
-  const key=document.getElementById("apiKey").value;
-  const model=document.getElementById("model").value;
+  const key=document.getElementById("apiKey").value.trim();
+  if(!key)throw new Error("API key required");
 
-  if(model==="openai"){
+  if(selectedModel==="openai"){
     const res=await fetch("https://api.openai.com/v1/chat/completions",{
       method:"POST",
-      headers:{
-        "Authorization":"Bearer "+key,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        model:"gpt-4o",
-        messages:[{role:"user",content:prompt}],
-        response_format:{type:"json_object"}
-      })
+      headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},
+      body:JSON.stringify({model:"gpt-4o",messages:[{role:"user",content:prompt}],response_format:{type:"json_object"}})
     });
     const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
     return data.choices[0].message.content;
   }
 
-  if(model==="claude"){
+  if(selectedModel==="claude"){
     const res=await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
-      headers:{
-        "x-api-key":key,
-        "anthropic-version":"2023-06-01",
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        model:"claude-3-opus-20240229",
-        max_tokens:4000,
-        messages:[{role:"user",content:prompt}]
-      })
+      headers:{"x-api-key":key,"anthropic-version":"2023-06-01","Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-opus-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})
     });
     const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
     return data.content[0].text;
   }
 
-  if(model==="groq"){
+  if(selectedModel==="groq"){
     const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
       method:"POST",
-      headers:{
-        "Authorization":"Bearer "+key,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        model:"llama-3.3-70b-versatile",
-        messages:[{role:"user",content:prompt}]
-      })
+      headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",messages:[{role:"user",content:prompt}]})
     });
     const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
     return data.choices[0].message.content;
   }
 
-  if(model==="gemini"){
+  if(selectedModel==="gemini"){
     const geminiModel='gemini-3-flash-preview';
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(key)}`,{
       method:"POST",
-      headers:{ "Content-Type":"application/json"},
-      body:JSON.stringify({
-        contents:[{parts:[{text:prompt}]}]
-      })
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
     });
     const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
     return data.candidates[0].content.parts[0].text;
   }
+
+  throw new Error("Unknown model");
 }
 
-/* ================= JD EXTRACTION ================= */
-
 async function extractJD(){
-  const link=document.getElementById("jobLink").value;
-
-  if(!link) return showError("Enter link");
-
+  const link=document.getElementById("jobLink").value.trim();
+  if(!link)return showError("Please enter a job link");
+  hideError();
+  setStatus("Fetching job description...");
+  document.getElementById('genBtn').disabled=true;
   try{
-    const prompt = `
-Extract FULL job description from this link.
-DO NOT summarize.
-If cannot access return FAILED.
-
-LINK:
-${link}
-`;
-
-    const res = await callAI(prompt);
-
+    const prompt=`Extract the FULL job description from this URL. Return the complete, unmodified text. If you cannot access it, return exactly: FAILED\n\nURL: ${link}`;
+    const res=await callAI(prompt);
     if(res.includes("FAILED")){
-      showError("Link failed. Paste manually.");
-      document.getElementById("jd").disabled=false;
-      return;
+      setMode('manual',document.querySelectorAll('.mode-tab')[1]);
+      showError("Could not fetch link automatically. Please paste the JD manually.");
+    }else{
+      document.getElementById('jd').value=res;
+      document.getElementById('jdPreview').style.display='block';
     }
-
-    document.getElementById("jd").value = res;
-    document.getElementById("jd").disabled = true;
-
   }catch(e){
-    showError("Extraction failed. Paste manually.");
-    document.getElementById("jd").disabled=false;
+    setMode('manual',document.querySelectorAll('.mode-tab')[1]);
+    showError("Extraction failed: "+e.message);
+  }finally{
+    setStatus(null);
+    document.getElementById('genBtn').disabled=false;
   }
 }
 
-/* ================= TAILOR ================= */
-
 async function generate(){
-  const jd=document.getElementById("jd").value;
-  const resume=document.getElementById("resume").value;
-
-  if(!jd) return showError("JD missing");
-  if(!resume) return showError("Resume missing");
-
+  const jd=document.getElementById("jd").value.trim();
+  const resume=document.getElementById("resume").value.trim();
+  hideError();
+  if(!jd)return showError("Job description is missing");
+  if(!resume)return showError("Resume is missing");
+  setStatus("Tailoring your resume...");
+  document.getElementById('genBtn').disabled=true;
+  document.getElementById('outputWrap').classList.remove('visible');
   try{
-    const prompt = `
-You are expert resume tailoring AI.
-
-STRICT:
-- DO NOT change JSON structure
-- ONLY optimize content for JD
-- Return ONLY JSON
-
-RESUME:
-${resume}
-
-JOB DESCRIPTION:
-${jd}
-`;
-
-    const result = await callAI(prompt);
-
-    document.getElementById("output").innerText = result;
-
+    const prompt=`You are an expert resume tailoring AI.\n\nRULES:\n- Do NOT change the JSON structure\n- Only optimize content to match the job description\n- Highlight relevant skills and experience\n- Return ONLY the tailored resume\n\nRESUME:\n${resume}\n\nJOB DESCRIPTION:\n${jd}`;
+    const result=await callAI(prompt);
+    document.getElementById("output").innerText=result;
+    document.getElementById('outputWrap').classList.add('visible');
   }catch(e){
-    showError("Failed: "+e.message);
+    showError("Generation failed: "+e.message);
+  }finally{
+    setStatus(null);
+    document.getElementById('genBtn').disabled=false;
   }
 }
 </script>
-
 </body>
 </html>
