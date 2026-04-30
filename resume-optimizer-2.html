@@ -105,6 +105,12 @@ body::after{
 }
 .api-eye:hover{color:var(--ink-soft)}
 .api-note{font-size:10.5px;color:var(--ink-faint);font-family:var(--f-mono);margin-top:6px;line-height:1.5}
+.json-panel textarea.api-input{
+  min-height:150px;resize:vertical;line-height:1.45;padding-top:12px;padding-bottom:12px;
+  font-size:11px;white-space:pre;
+}
+.json-file-row{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.json-file-row input[type=file]{font-size:10px;max-width:100%}
 
 /* Upload zone */
 .upload-zone{
@@ -413,7 +419,7 @@ body::after{
     <div class="brand">
       <div class="brand-eyebrow">AI Powered</div>
       <div class="brand-name">Resume<span>Forge</span></div>
-      <div class="brand-sub">Upload your PDF. We rewrite, restructure and deliver a professional, ATS-ready document.</div>
+      <div class="brand-sub">Upload a PDF or paste structured JSON (same shape as ResumeForge JSON export). We rewrite, restructure and deliver a professional, ATS-ready document.</div>
     </div>
 
     <!-- Model -->
@@ -441,30 +447,48 @@ body::after{
       <div class="api-note">🔒 Stays in your browser only — never stored.</div>
     </div>
 
-    <!-- Upload -->
+    <!-- Resume source: PDF or JSON -->
     <div>
-      <div class="field-label">Resume PDF</div>
-      <div class="upload-zone" id="drop-zone"
-           ondragover="ev.preventDefault();this.classList.add('drag')"
-           ondragleave="this.classList.remove('drag')"
-           ondrop="this.classList.remove('drag');handleFile(event.dataTransfer.files[0]);event.preventDefault()">
-        <input type="file" accept=".pdf" onchange="handleFile(this.files[0])"/>
-        <div class="upload-icon-wrap">
-          <svg fill="none" stroke-width="1.8" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-        </div>
-        <h3>Drop PDF here</h3>
-        <p>or click to browse</p>
-        <div class="file-chip" id="file-chip">
-          <svg width="16" height="16" fill="none" stroke="#059669" stroke-width="2.2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <div>
-            <div class="file-chip-name" id="fname"></div>
-            <div class="file-chip-size" id="fsize"></div>
+      <div class="field-label">Resume source</div>
+      <div class="model-row" style="margin-bottom:12px">
+        <button type="button" class="model-btn active source-tab" id="src-pdf" onclick="setInputMode('pdf',this)">PDF</button>
+        <button type="button" class="model-btn source-tab" id="src-json" onclick="setInputMode('json',this)">JSON</button>
+      </div>
+
+      <div id="panel-pdf">
+        <div class="field-label">Resume PDF</div>
+        <div class="upload-zone" id="drop-zone"
+             ondragover="ev.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="this.classList.remove('drag');handleFile(event.dataTransfer.files[0]);event.preventDefault()">
+          <input type="file" accept=".pdf" onchange="handleFile(this.files[0])"/>
+          <div class="upload-icon-wrap">
+            <svg fill="none" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h3>Drop PDF here</h3>
+          <p>or click to browse</p>
+          <div class="file-chip" id="file-chip">
+            <svg width="16" height="16" fill="none" stroke="#059669" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <div class="file-chip-name" id="fname"></div>
+              <div class="file-chip-size" id="fsize"></div>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div id="panel-json" class="json-panel" style="display:none">
+        <div class="field-label">Resume JSON</div>
+        <textarea class="api-input" id="json-input" placeholder='Paste JSON (meta, personal, summary, skills, experience, …)' autocomplete="off" oninput="onJsonInput()"></textarea>
+        <div class="json-file-row">
+          <span style="font-size:10px;color:var(--ink-faint)">Or load file:</span>
+          <input type="file" accept=".json,application/json" id="json-file" onchange="handleJsonFile(this.files[0])"/>
+        </div>
+        <div class="api-note">Use the same top-level keys as your <strong>resume-json</strong> export (values may differ). Invalid JSON is rejected before the AI step.</div>
       </div>
     </div>
 
@@ -503,7 +527,7 @@ body::after{
       <svg fill="none" stroke-width="1.2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
-      <p>Your optimized resume will appear here once you upload a PDF and run the optimizer.</p>
+      <p>Your optimized resume will appear here once you add a PDF or resume JSON and run the optimizer.</p>
     </div>
 
     <!-- Result header -->
@@ -547,14 +571,22 @@ body::after{
 <script>
 /* ─── globals ─── */
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-let selFile=null, selModel='claude';
+let selFile=null, selModel='claude', inputMode='pdf';
 
 /* ─── helpers ─── */
 const $=id=>document.getElementById(id);
 function setModel(m,btn){
   selModel=m;
-  document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.model-row .model-btn:not(.source-tab)').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+}
+function setInputMode(mode,btn){
+  inputMode=mode;
+  document.querySelectorAll('.source-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  $('panel-pdf').style.display=mode==='pdf'?'block':'none';
+  $('panel-json').style.display=mode==='json'?'block':'none';
+  updateBtn();
 }
 function toggleKey(){
   const inp=$('api-key');
@@ -568,9 +600,26 @@ function handleFile(f){
   $('fsize').textContent=(f.size/1024).toFixed(1)+' KB';
   updateBtn();
 }
+function onJsonInput(){ updateBtn(); }
+function handleJsonFile(f){
+  if(!f) return;
+  const ok=f.name.toLowerCase().endsWith('.json')||f.type==='application/json'||f.type==='text/json'||f.type==='';
+  if(!ok){ showErr('Please choose a .json file.'); return; }
+  const r=new FileReader();
+  r.onload=e=>{
+    $('json-input').value=e.target.result||'';
+    updateBtn();
+  };
+  r.onerror=()=>showErr('Could not read JSON file.');
+  r.readAsText(f);
+  $('json-file').value='';
+}
 function updateBtn(){
-  const ok=!!selFile && $('api-key').value.trim().length>10;
-  $('go-btn').disabled=!ok;
+  const keyOk=$('api-key').value.trim().length>10;
+  let srcOk=false;
+  if(inputMode==='pdf') srcOk=!!selFile;
+  else srcOk=$('json-input').value.trim().length>20;
+  $('go-btn').disabled=!(keyOk&&srcOk);
 }
 function showErr(m){const e=$('err-box');e.textContent='⚠ '+m;e.classList.add('show');}
 function clearErr(){$('err-box').classList.remove('show')}
@@ -726,8 +775,12 @@ JSON SCHEMA:
 CRITICAL: Only populate arrays/objects where you have real data. Use null or empty arrays [] for missing data. Never fabricate anything.`;
 
 /* ─── AI API calls ─── */
-async function callAI(text,key,model){
-  const fullPrompt=PROMPT+'\n\nRESUME TEXT:\n'+text;
+async function callAI(text,key,model,opts={}){
+  const fromJson=opts.fromJson===true;
+  const inputBlock=fromJson
+    ? 'STRUCTURED RESUME INPUT (JSON from extraction export — use as the only source of facts; optimize into the schema below):\n'+text
+    : 'RESUME TEXT:\n'+text;
+  const fullPrompt=PROMPT+'\n\n'+inputBlock;
   if(model==='claude'){
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -1073,12 +1126,26 @@ async function runOptimize(){
   $('sug-wrap').classList.remove('show');
 
   try{
-    setProg(12,'Extracting text from PDF…',1);
-    const txt=await extractText(selFile);
-    if(!txt||txt.length<40) throw new Error('Could not extract text. Make sure your PDF is text-based (not a scanned image).');
+    let payload, fromJson=false;
+    if(inputMode==='pdf'){
+      setProg(12,'Extracting text from PDF…',1);
+      payload=await extractText(selFile);
+      if(!payload||payload.length<40) throw new Error('Could not extract text. Make sure your PDF is text-based (not a scanned image).');
+    }else{
+      setProg(12,'Validating resume JSON…',1);
+      const rawJ=$('json-input').value.trim();
+      let parsed;
+      try{ parsed=JSON.parse(rawJ); }
+      catch(err){ throw new Error('Invalid JSON: '+err.message); }
+      if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)) throw new Error('JSON must be a single object.');
+      const hasResumeShape=('personal'in parsed)||('experience'in parsed)||('summary'in parsed)||('skills'in parsed);
+      if(!hasResumeShape) throw new Error('JSON must look like resume data (e.g. personal, experience, summary, or skills).');
+      payload=JSON.stringify(parsed,null,2);
+      fromJson=true;
+    }
 
     setProg(30,'Sending to AI for deep optimization…',2);
-    const raw=await callAI(txt,key,selModel);
+    const raw=await callAI(payload,key,selModel,{fromJson});
 
     setProg(75,'Building professional resume…',3);
     const clean=raw.replace(/```json|```/g,'').trim();

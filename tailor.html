@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI Resume Tailor</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ── Reset + tokens (resume-json.html) ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:       #0C0E12;
+  --bg2:      #111318;
+  --bg3:      #181B22;
+  --border:   #252830;
+  --border2:  #2E323C;
+  --text:     #E2E6F0;
+  --text2:    #8B91A1;
+  --text3:    #555B6B;
+  --accent:   #3B82F6;
+  --accent-d: #1D4ED8;
+  --accent-g: #60A5FA;
+  --green:    #34D399;
+  --red:      #F87171;
+  --purple:   #A78BFA;
+
+  --ff-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+  --ff-sans: 'IBM Plex Sans', sans-serif;
+  --radius:  10px;
+  --shadow:  0 4px 24px rgba(0,0,0,.4);
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--ff-sans);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.012) 2px,rgba(255,255,255,.012) 4px);
+}
+
+.container{
+  position:relative;z-index:1;
+  max-width:900px;margin:0 auto;
+  padding:44px 24px 80px;
+}
+
+h2{
+  font-family:var(--ff-mono);font-size:24px;font-weight:600;
+  color:var(--text);letter-spacing:-1px;
+  margin-bottom:8px;
+  padding-bottom:28px;
+  border-bottom:1px solid var(--border);
+}
+
+/* Model select + fields */
+select#model{
+  width:100%;margin-top:20px;margin-bottom:16px;
+  padding:10px 12px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:7px;
+  font-family:var(--ff-mono);font-size:12px;color:var(--text);
+  outline:none;cursor:pointer;transition:border-color .15s;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23555B6B' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+select#model:focus{border-color:var(--accent)}
+
+input#apiKey,
+input#jobLink,
+textarea#jd,
+textarea#resume{
+  width:100%;margin-top:8px;margin-bottom:4px;
+  padding:10px 12px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:7px;
+  font-family:var(--ff-mono);font-size:12px;color:var(--text);
+  outline:none;transition:border-color .15s;
+}
+input#apiKey:focus,
+input#jobLink:focus,
+textarea#jd:focus,
+textarea#resume:focus{border-color:var(--accent)}
+input#apiKey::placeholder,
+input#jobLink::placeholder,
+textarea#jd::placeholder,
+textarea#resume::placeholder{color:var(--text3)}
+textarea#jd,
+textarea#resume{min-height:120px;line-height:1.55;resize:vertical;margin-top:12px}
+
+#linkBox{margin-top:4px}
+
+/* Tabs — same pattern as .model-tabs / .mtab */
+.tabs{
+  display:flex;gap:1px;background:var(--border);border-radius:7px;overflow:hidden;
+  margin-top:16px;margin-bottom:12px;
+}
+.tab{
+  flex:1;padding:9px 6px;font-family:var(--ff-mono);font-size:11px;font-weight:500;
+  background:var(--bg3);color:var(--text3);border:none;cursor:pointer;
+  transition:all .15s;text-align:center;margin:0;
+}
+.tab:hover{background:var(--bg2);color:var(--text2)}
+.tab.active{background:var(--accent);color:#fff}
+
+/* Buttons — same pattern as .btn-run */
+button{
+  width:100%;margin-top:16px;padding:13px;
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  font-family:var(--ff-mono);font-size:12px;font-weight:600;letter-spacing:.5px;
+  cursor:pointer;transition:all .18s;
+}
+button:hover:not(:disabled){background:var(--accent-d);box-shadow:0 0 20px rgba(59,130,246,.3)}
+button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Output — panel feel */
+.output{
+  margin-top:24px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;
+  white-space:pre-wrap;word-break:break-word;
+  font-family:var(--ff-mono);font-size:12px;line-height:1.75;
+  color:var(--text2);
+  max-height:70vh;overflow:auto;
+}
+
+/* Error — same pattern as .err */
+.error{
+  margin-top:14px;padding:12px 14px;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);
+  border-radius:7px;font-family:var(--ff-mono);font-size:11px;color:var(--red);
+  line-height:1.6;
+}
+.error:empty{display:none}
+
+/* Scrollbar (resume-json.html) */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>AI Resume Tailoring App</h2>
+
+<!-- AI MODEL -->
+<select id="model">
+  <option value="openai">OpenAI</option>
+  <option value="claude">Claude</option>
+  <option value="groq">Groq</option>
+  <option value="gemini">Gemini</option>
+</select>
+
+<input id="apiKey" placeholder="Enter API Key"/>
+
+<!-- JD MODE -->
+<div class="tabs">
+  <div class="tab active" onclick="setMode('link',this)">Link</div>
+  <div class="tab" onclick="setMode('manual',this)">Manual</div>
+</div>
+
+<!-- LINK -->
+<div id="linkBox">
+  <input id="jobLink" placeholder="Paste job link"/>
+  <button onclick="extractJD()">Extract JD</button>
+</div>
+
+<!-- JD -->
+<textarea id="jd" rows="6" placeholder="Job description..." disabled></textarea>
+
+<!-- RESUME -->
+<textarea id="resume" rows="6" placeholder="Paste Resume JSON"></textarea>
+
+<button onclick="generate()">Generate Tailored Resume</button>
+
+<div class="error" id="error"></div>
+<div class="output" id="output"></div>
+
+</div>
+
+<script>
+let mode = "link";
+
+function setMode(m,el){
+  mode=m;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+
+  document.getElementById('linkBox').style.display = m==='link'?'block':'none';
+  document.getElementById('jd').disabled = m==='link';
+}
+
+function showError(msg){
+  document.getElementById('error').innerText = msg;
+}
+
+/* ================= AI CALL ================= */
+
+async function callAI(prompt){
+  const key=document.getElementById("apiKey").value;
+  const model=document.getElementById("model").value;
+
+  if(model==="openai"){
+    const res=await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Authorization":"Bearer "+key,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        model:"gpt-4o",
+        messages:[{role:"user",content:prompt}],
+        response_format:{type:"json_object"}
+      })
+    });
+    const data=await res.json();
+    return data.choices[0].message.content;
+  }
+
+  if(model==="claude"){
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "x-api-key":key,
+        "anthropic-version":"2023-06-01",
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        model:"claude-3-opus-20240229",
+        max_tokens:4000,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    const data=await res.json();
+    return data.content[0].text;
+  }
+
+  if(model==="groq"){
+    const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Authorization":"Bearer "+key,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        model:"llama-3.3-70b-versatile",
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    const data=await res.json();
+    return data.choices[0].message.content;
+  }
+
+  if(model==="gemini"){
+    const geminiModel='gemini-3-flash-preview';
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}]
+      })
+    });
+    const data=await res.json();
+    return data.candidates[0].content.parts[0].text;
+  }
+}
+
+/* ================= JD EXTRACTION ================= */
+
+async function extractJD(){
+  const link=document.getElementById("jobLink").value;
+
+  if(!link) return showError("Enter link");
+
+  try{
+    const prompt = `
+Extract FULL job description from this link.
+DO NOT summarize.
+If cannot access return FAILED.
+
+LINK:
+${link}
+`;
+
+    const res = await callAI(prompt);
+
+    if(res.includes("FAILED")){
+      showError("Link failed. Paste manually.");
+      document.getElementById("jd").disabled=false;
+      return;
+    }
+
+    document.getElementById("jd").value = res;
+    document.getElementById("jd").disabled = true;
+
+  }catch(e){
+    showError("Extraction failed. Paste manually.");
+    document.getElementById("jd").disabled=false;
+  }
+}
+
+/* ================= TAILOR ================= */
+
+async function generate(){
+  const jd=document.getElementById("jd").value;
+  const resume=document.getElementById("resume").value;
+
+  if(!jd) return showError("JD missing");
+  if(!resume) return showError("Resume missing");
+
+  try{
+    const prompt = `
+You are expert resume tailoring AI.
+
+STRICT:
+- DO NOT change JSON structure
+- ONLY optimize content for JD
+- Return ONLY JSON
+
+RESUME:
+${resume}
+
+JOB DESCRIPTION:
+${jd}
+`;
+
+    const result = await callAI(prompt);
+
+    document.getElementById("output").innerText = result;
+
+  }catch(e){
+    showError("Failed: "+e.message);
+  }
+}
+</script>
+
+</body>
+</html>
