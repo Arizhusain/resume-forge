@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeJSON — Extract Resume to JSON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── Tokens ── */
+:root{
+  --bg:       #0C0E12;
+  --bg2:      #111318;
+  --bg3:      #181B22;
+  --border:   #252830;
+  --border2:  #2E323C;
+  --text:     #E2E6F0;
+  --text2:    #8B91A1;
+  --text3:    #555B6B;
+  --accent:   #3B82F6;
+  --accent-d: #1D4ED8;
+  --accent-g: #60A5FA;
+  --green:    #34D399;
+  --green-d:  #059669;
+  --amber:    #FBBF24;
+  --red:      #F87171;
+  --purple:   #A78BFA;
+
+  /* JSON syntax colors */
+  --j-key:    #7DD3FC;
+  --j-str:    #86EFAC;
+  --j-num:    #FCA5A5;
+  --j-bool:   #FCD34D;
+  --j-null:   #94A3B8;
+  --j-brace:  #E2E8F0;
+  --j-comma:  #64748B;
+
+  --ff-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+  --ff-sans: 'IBM Plex Sans', sans-serif;
+  --radius:  10px;
+  --shadow:  0 4px 24px rgba(0,0,0,.4);
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--ff-sans);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* scanline overlay */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.012) 2px,rgba(255,255,255,.012) 4px);
+}
+
+/* ── Layout ── */
+.app{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:0 24px 80px}
+
+/* ── Header ── */
+.header{
+  padding:44px 0 36px;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  border-bottom:1px solid var(--border);margin-bottom:36px;
+}
+.brand{display:flex;flex-direction:column;gap:6px}
+.brand-badge{
+  font-family:var(--ff-mono);font-size:10px;font-weight:500;letter-spacing:2px;
+  text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:6px;
+}
+.brand-badge::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--accent);animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.brand-name{
+  font-family:var(--ff-mono);font-size:28px;font-weight:600;
+  color:var(--text);letter-spacing:-1px;
+}
+.brand-name span{color:var(--accent)}
+.brand-desc{font-size:13px;color:var(--text3);font-family:var(--ff-mono);margin-top:2px}
+.header-rule{
+  display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+  font-family:var(--ff-mono);font-size:10px;color:var(--text3);
+}
+.header-rule span{color:var(--accent-g)}
+
+/* ── Grid ── */
+.grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* ── Panel ── */
+.panel{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+}
+.panel-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{
+  font-family:var(--ff-mono);font-size:11px;font-weight:500;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{content:'//';color:var(--text3);font-size:10px}
+.panel-body{padding:18px}
+
+/* ── Config fields ── */
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.field-label{
+  font-family:var(--ff-mono);font-size:10px;font-weight:500;
+  letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:7px;
+  display:flex;align-items:center;gap:6px;
+}
+.field-label::before{content:'>';color:var(--accent);font-size:11px}
+
+/* Model tabs */
+.model-tabs{display:flex;gap:1px;background:var(--border);border-radius:7px;overflow:hidden}
+.mtab{
+  flex:1;padding:9px 6px;font-family:var(--ff-mono);font-size:11px;font-weight:500;
+  background:var(--bg3);color:var(--text3);border:none;cursor:pointer;
+  transition:all .15s;text-align:center;
+}
+.mtab:hover{background:var(--bg2);color:var(--text2)}
+.mtab.on{background:var(--accent);color:#fff}
+
+/* Input */
+.inp{
+  width:100%;padding:10px 12px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:7px;
+  font-family:var(--ff-mono);font-size:12px;color:var(--text);
+  outline:none;transition:border-color .15s;
+}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.inp-hint{font-family:var(--ff-mono);font-size:10px;color:var(--text3);margin-top:5px;line-height:1.5}
+
+/* Upload area */
+.drop{
+  border:1px dashed var(--border2);border-radius:8px;
+  padding:28px 16px;text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;background:var(--bg3);
+}
+.drop:hover,.drop.drag{border-color:var(--accent);background:rgba(59,130,246,.06)}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{
+  width:40px;height:40px;margin:0 auto 10px;
+  border:1px solid var(--border2);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg2);
+}
+.drop-icon svg{width:18px;height:18px;stroke:var(--accent)}
+.drop h4{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.drop p{font-size:11px;color:var(--text3);font-family:var(--ff-mono)}
+.drop-formats{
+  display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap
+}
+.fmt-tag{
+  font-family:var(--ff-mono);font-size:9px;font-weight:500;
+  padding:2px 7px;border-radius:4px;
+  background:var(--bg);border:1px solid var(--border2);color:var(--text3);
+}
+
+/* File chip */
+.file-chip{
+  display:none;align-items:center;gap:10px;margin-top:12px;
+  background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);
+  border-radius:7px;padding:10px 12px;
+}
+.file-chip-info .name{font-size:12px;font-weight:500;color:var(--green);font-family:var(--ff-mono)}
+.file-chip-info .size{font-size:10px;color:var(--text3);font-family:var(--ff-mono);margin-top:2px}
+.chip-remove{
+  margin-left:auto;background:none;border:none;cursor:pointer;
+  color:var(--text3);padding:2px;transition:color .15s;font-size:16px;line-height:1;
+}
+.chip-remove:hover{color:var(--red)}
+
+/* Run button */
+.btn-run{
+  width:100%;padding:13px;margin-top:20px;
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  font-family:var(--ff-mono);font-size:12px;font-weight:600;letter-spacing:.5px;
+  cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-run:hover:not(:disabled){background:var(--accent-d);box-shadow:0 0 20px rgba(59,130,246,.3)}
+.btn-run:disabled{opacity:.4;cursor:not-allowed}
+
+/* Progress */
+.prog-wrap{margin-top:18px;display:none}
+.prog-wrap.show{display:block}
+.prog-bar-track{height:2px;background:var(--border2);border-radius:1px;overflow:hidden;margin-bottom:10px}
+.prog-bar-fill{
+  height:100%;border-radius:1px;width:0%;transition:width .4s ease;
+  background:linear-gradient(90deg,var(--accent),var(--purple),var(--accent-g));
+  background-size:200% 100%;animation:shimmer 2s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+.prog-steps{display:flex;flex-direction:column;gap:6px}
+.ps{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--ff-mono);font-size:10px;color:var(--text3);
+  transition:color .2s;
+}
+.ps-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--border2);flex-shrink:0;transition:all .2s;
+}
+.ps.active{color:var(--accent)}
+.ps.active .ps-dot{background:var(--accent);box-shadow:0 0 6px var(--accent)}
+.ps.done{color:var(--green)}
+.ps.done .ps-dot{background:var(--green)}
+
+/* Error */
+.err{
+  margin-top:14px;padding:12px 14px;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);
+  border-radius:7px;font-family:var(--ff-mono);font-size:11px;color:var(--red);
+  line-height:1.6;display:none;
+}
+.err.show{display:block}
+
+/* ── Output panel ── */
+.out-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.out-head{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.out-title{
+  font-family:var(--ff-mono);font-size:11px;font-weight:500;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);
+  display:flex;align-items:center;gap:10px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:all .3s}
+.status-dot.ready{background:var(--green);box-shadow:0 0 8px var(--green)}
+.out-actions{display:flex;gap:8px}
+.act-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:6px;
+  font-family:var(--ff-mono);font-size:10px;font-weight:500;
+  border:1px solid var(--border2);background:var(--bg3);color:var(--text2);
+  cursor:pointer;transition:all .15s;
+}
+.act-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08)}
+.act-btn svg{width:12px;height:12px;stroke:currentColor}
+.act-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.act-btn.primary:hover{background:var(--accent-d)}
+
+/* line count bar */
+.out-meta{
+  padding:8px 18px;border-bottom:1px solid var(--border);
+  display:flex;gap:16px;font-family:var(--ff-mono);font-size:10px;color:var(--text3);
+  display:none;
+}
+.out-meta.show{display:flex}
+.meta-item span{color:var(--text2);font-weight:500}
+
+/* empty state */
+.out-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 32px;gap:14px;color:var(--text3);
+}
+.out-empty pre{
+  font-family:var(--ff-mono);font-size:12px;color:var(--text3);
+  line-height:1.7;text-align:left;
+}
+
+/* JSON viewer */
+.json-viewer{
+  overflow:auto;padding:0;
+  font-family:var(--ff-mono);font-size:12.5px;line-height:1.75;
+  max-height:78vh;
+}
+
+/* line numbers + code */
+.code-table{border-collapse:collapse;width:100%;table-layout:auto}
+.code-table tr{display:flex}
+.ln{
+  user-select:none;text-align:right;padding:0 14px 0 16px;
+  color:var(--text3);font-size:11px;min-width:48px;flex-shrink:0;
+  border-right:1px solid var(--border);background:var(--bg);
+  line-height:1.75;
+}
+.lc{padding:0 20px;white-space:pre-wrap;word-break:break-all;flex:1;line-height:1.75}
+
+/* Syntax highlight */
+.jk{color:var(--j-key)}       /* key */
+.js{color:var(--j-str)}       /* string value */
+.jn{color:var(--j-num)}       /* number */
+.jb{color:var(--j-bool)}      /* boolean */
+.jz{color:var(--j-null)}      /* null */
+.jbr{color:var(--j-brace)}    /* braces/brackets */
+.jc{color:var(--j-comma)}     /* comma/colon */
+
+/* hover row highlight */
+.code-table tr:hover .lc{background:rgba(255,255,255,.025)}
+.code-table tr:hover .ln{color:var(--text2)}
+
+/* search highlight */
+.hl{background:rgba(251,191,36,.25);border-radius:2px}
+
+/* ── Search bar ── */
+.search-bar{
+  display:none;padding:10px 18px;border-bottom:1px solid var(--border);
+  background:var(--bg3);align-items:center;gap:8px;
+}
+.search-bar.show{display:flex}
+.search-inp{
+  flex:1;background:none;border:none;outline:none;
+  font-family:var(--ff-mono);font-size:12px;color:var(--text);
+}
+.search-inp::placeholder{color:var(--text3)}
+.search-count{font-family:var(--ff-mono);font-size:10px;color:var(--text3);white-space:nowrap}
+
+/* ── Schema sidebar toggle ── */
+.schema-hint{
+  margin-top:18px;padding:12px 14px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:8px;
+}
+.schema-hint-head{
+  font-family:var(--ff-mono);font-size:10px;font-weight:500;
+  letter-spacing:1px;text-transform:uppercase;color:var(--text3);
+  cursor:pointer;user-select:none;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.schema-hint-head:hover{color:var(--text2)}
+.schema-body{
+  margin-top:10px;font-family:var(--ff-mono);font-size:10px;
+  color:var(--text3);line-height:1.8;display:none;
+}
+.schema-body.open{display:block}
+.schema-key{color:var(--j-key)}
+.schema-type{color:var(--j-num)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-badge">Resume Parser</div>
+      <div class="brand-name">Resume<span>JSON</span></div>
+      <div class="brand-desc">// extract · structure · no edits · pure data</div>
+    </div>
+    <div class="header-rule">
+      <div>schema_version <span>1.0</span></div>
+      <div>output_format <span>"application/json"</span></div>
+      <div>text_modification <span>false</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ══ LEFT — Controls ══ -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Config panel -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Configuration</div>
+        </div>
+        <div class="panel-body">
+
+          <!-- Model -->
+          <div class="field">
+            <div class="field-label">AI Model</div>
+            <div class="model-tabs">
+              <button class="mtab on" onclick="setModel('claude',this)">Claude</button>
+              <button class="mtab" onclick="setModel('openai',this)">GPT-4o</button>
+              <button class="mtab" onclick="setModel('groq',this)">Groq</button>
+              <button class="mtab" onclick="setModel('gemini',this)">Gemini</button>
+            </div>
+          </div>
+
+          <!-- API Key -->
+          <div class="field">
+            <div class="field-label">API Key</div>
+            <input class="inp" type="password" id="api-key" placeholder="Paste key here…" oninput="tick()"/>
+            <div class="inp-hint">🔒 Browser-only. Never stored or transmitted except to your chosen AI provider.</div>
+          </div>
+
+          <!-- Upload -->
+          <div class="field">
+            <div class="field-label">Resume File</div>
+            <div class="drop" id="drop"
+                 ondragover="event.preventDefault();this.classList.add('drag')"
+                 ondragleave="this.classList.remove('drag')"
+                 ondrop="event.preventDefault();this.classList.remove('drag');pick(event.dataTransfer.files[0])">
+              <input type="file" accept=".pdf,.doc,.docx,.txt,.rtf" onchange="pick(this.files[0])"/>
+              <div class="drop-icon">
+                <svg fill="none" stroke-width="1.7" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <h4>Drop resume here</h4>
+              <p>or click to browse</p>
+              <div class="drop-formats">
+                <span class="fmt-tag">PDF</span>
+                <span class="fmt-tag">TXT</span>
+                <span class="fmt-tag">RTF</span>
+              </div>
+            </div>
+            <div class="file-chip" id="fc">
+              <svg width="16" height="16" fill="none" stroke="#34D399" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div class="file-chip-info">
+                <div class="name" id="fc-name"></div>
+                <div class="size" id="fc-size"></div>
+              </div>
+              <button class="chip-remove" onclick="removeFile()" title="Remove">×</button>
+            </div>
+          </div>
+
+          <button class="btn-run" id="run-btn" disabled onclick="run()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6M9 8h6M9 16h4"/>
+            </svg>
+            Extract to JSON
+          </button>
+
+          <!-- Progress -->
+          <div class="prog-wrap" id="pw">
+            <div class="prog-bar-track"><div class="prog-bar-fill" id="pf"></div></div>
+            <div class="prog-steps">
+              <div class="ps" id="ps1"><div class="ps-dot"></div><span id="ps1t">Waiting…</span></div>
+              <div class="ps" id="ps2"><div class="ps-dot"></div><span id="ps2t">Send to AI</span></div>
+              <div class="ps" id="ps3"><div class="ps-dot"></div><span id="ps3t">Parse JSON</span></div>
+              <div class="ps" id="ps4"><div class="ps-dot"></div><span id="ps4t">Render</span></div>
+            </div>
+          </div>
+
+          <div class="err" id="err"></div>
+        </div>
+      </div>
+
+      <!-- Schema reference -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Schema Reference</div>
+        </div>
+        <div class="panel-body" style="padding:14px 16px">
+          <div style="font-family:var(--ff-mono);font-size:10px;color:var(--text3);line-height:2">
+            <div><span class="schema-key">"meta"</span> <span class="schema-type">object</span> — type, target_role</div>
+            <div><span class="schema-key">"personal"</span> <span class="schema-type">object</span> — name, contact, links</div>
+            <div><span class="schema-key">"summary"</span> <span class="schema-type">object</span> — tagline, body, keywords</div>
+            <div><span class="schema-key">"skills"</span> <span class="schema-type">object</span> — technical, domain, soft</div>
+            <div><span class="schema-key">"experience"</span> <span class="schema-type">array</span> — company, roles[]</div>
+            <div><span class="schema-key">"education"</span> <span class="schema-type">array</span> — degree, institution</div>
+            <div><span class="schema-key">"projects"</span> <span class="schema-type">array</span> — name, description</div>
+            <div><span class="schema-key">"certifications"</span> <span class="schema-type">array</span> — name, issuer</div>
+            <div><span class="schema-key">"awards"</span> <span class="schema-type">array</span> — title, description</div>
+            <div><span class="schema-key">"publications"</span> <span class="schema-type">array</span> — title, publisher</div>
+            <div><span class="schema-key">"volunteer"</span> <span class="schema-type">array</span> — role, organization</div>
+            <div><span class="schema-key">"open_source"</span> <span class="schema-type">array</span> — project, contribution</div>
+            <div><span class="schema-key">"speaking"</span> <span class="schema-type">array</span> — event, talk_title</div>
+            <div><span class="schema-key">"ats_metadata"</span> <span class="schema-type">object</span> — yoe, skills</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ RIGHT — Output ══ -->
+    <div class="out-panel" id="out-panel">
+      <div class="out-head">
+        <div class="out-title">
+          <div class="status-dot" id="sdot"></div>
+          output.json
+        </div>
+        <div class="out-actions">
+          <button class="act-btn" onclick="toggleSearch()" title="Search (Ctrl+F)" id="search-toggle-btn">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+            Search
+          </button>
+          <button class="act-btn" id="copy-btn" onclick="copyJSON()">
+            <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Copy
+          </button>
+          <button class="act-btn primary" id="dl-btn" onclick="dlJSON()" disabled>
+            <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download
+          </button>
+        </div>
+      </div>
+
+      <!-- search bar -->
+      <div class="search-bar" id="search-bar">
+        <svg width="13" height="13" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+        <input class="search-inp" id="search-inp" placeholder="Search keys or values…" oninput="doSearch()"/>
+        <span class="search-count" id="search-count"></span>
+        <button class="act-btn" onclick="toggleSearch()" style="padding:3px 7px">✕</button>
+      </div>
+
+      <!-- meta bar -->
+      <div class="out-meta" id="out-meta">
+        <div class="meta-item">lines: <span id="m-lines">—</span></div>
+        <div class="meta-item">keys: <span id="m-keys">—</span></div>
+        <div class="meta-item">size: <span id="m-size">—</span></div>
+        <div class="meta-item">sections: <span id="m-secs">—</span></div>
+      </div>
+
+      <!-- empty state -->
+      <div class="out-empty" id="out-empty">
+        <svg width="40" height="40" fill="none" stroke="var(--border2)" stroke-width="1.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <pre style="color:var(--border2);font-size:11px">{
+  "status": "waiting",
+  "message": "Upload a resume + add API key",
+  "data": null
+}</pre>
+      </div>
+
+      <!-- actual viewer -->
+      <div class="json-viewer" id="jv" style="display:none">
+        <table class="code-table" id="ct"><tbody id="cb"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let selFile=null, selModel='claude', rawJSON='', parsedData=null;
+
+/* ─── model ─── */
+function setModel(m,btn){
+  selModel=m;
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+/* ─── file ─── */
+function pick(f){
+  if(!f) return;
+  const ok=['application/pdf','text/plain','text/rtf','application/rtf'];
+  const extOk=/\.(pdf|txt|rtf)$/i.test(f.name);
+  if(!ok.includes(f.type)&&!extOk){ showErr('Supported: PDF, TXT, RTF'); return; }
+  selFile=f;
+  document.getElementById('fc').style.display='flex';
+  document.getElementById('fc-name').textContent=f.name;
+  document.getElementById('fc-size').textContent=(f.size/1024).toFixed(1)+' KB · '+f.type.split('/')[1].toUpperCase();
+  tick();
+}
+function removeFile(){
+  selFile=null;
+  document.getElementById('fc').style.display='none';
+  document.getElementById('fc-name').textContent='';
+  tick();
+}
+
+function tick(){
+  const ok=selFile && document.getElementById('api-key').value.trim().length>10;
+  document.getElementById('run-btn').disabled=!ok;
+}
+
+/* ─── progress ─── */
+function setProg(pct, s1,s2,s3,s4){
+  document.getElementById('pf').style.width=pct+'%';
+  const steps=[s1,s2,s3,s4];
+  ['ps1','ps2','ps3','ps4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.className='ps';
+    if(steps[i]==='done')   el.classList.add('done');
+    else if(steps[i]==='active') el.classList.add('active');
+    if(id==='ps1'&&pct>0&&s1==='active') document.getElementById('ps1t').textContent='Reading file…';
+    if(id==='ps1'&&s1==='done')          document.getElementById('ps1t').textContent='File read ✓';
+  });
+}
+
+function showErr(m){ const e=document.getElementById('err'); e.textContent='⚠ '+m; e.classList.add('show'); }
+function clearErr(){ document.getElementById('err').classList.remove('show'); }
+
+/* ─── extract text ─── */
+async function readFile(file){
+  if(file.type==='application/pdf' || /\.pdf$/i.test(file.name)){
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let txt='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const pg=await pdf.getPage(i);
+      const c=await pg.getTextContent();
+      txt+=c.items.map(s=>s.str).join(' ')+'\n';
+    }
+    return txt.trim();
+  }
+  // txt / rtf — just read as text
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result);
+    r.onerror=()=>rej(new Error('Could not read file'));
+    r.readAsText(file);
+  });
+}
+
+/* ─── Prompt — STRICT extraction, zero modification ─── */
+const EXTRACT_PROMPT=`You are a precise data extraction engine. Your ONLY job is to read the resume text and map its content into the JSON schema below.
+
+STRICT RULES — VIOLATIONS ARE NOT ACCEPTABLE:
+1. COPY text EXACTLY as written — do not rephrase, improve, rewrite, or change a single word
+2. Do NOT add any text that is not in the resume
+3. Do NOT optimize, enhance, or improve any content
+4. Do NOT infer or guess data that is not explicitly stated
+5. If a field's data is not present in the resume, set it to null or [] — never fabricate
+6. Dates: extract exactly as written; convert to YYYY-MM format only if the month and year are clearly stated
+7. Bullet points / achievements: copy the EXACT original text word-for-word into the "task" field; set "action" to the first word if it's a verb, otherwise null; leave "result" and "metric" null unless explicitly stated in the resume
+8. Skills: list exactly as written, preserve original naming (e.g. "React.js" not "ReactJS")
+9. Output ONLY the raw JSON object — no markdown, no code fences, no explanation, no preamble
+
+JSON SCHEMA TO POPULATE:
+{
+  "meta": {
+    "schema_version": "1.0",
+    "resume_type": "tech|non-tech|academic|creative|executive — infer from content",
+    "target_role": "infer from most recent job title or summary, else null",
+    "ats_optimized": false
+  },
+  "personal": {
+    "full_name": "string or null",
+    "preferred_name": null,
+    "headline": "copy verbatim from resume if present, else null",
+    "email": "string or null",
+    "phone": "string or null",
+    "location": {
+      "city": "string or null",
+      "state": "string or null",
+      "country": "string or null",
+      "remote_preference": null
+    },
+    "links": {
+      "linkedin": "string or null",
+      "github": "string or null",
+      "portfolio": "string or null",
+      "website": "string or null",
+      "behance": null,
+      "medium": null,
+      "twitter_x": null
+    }
+  },
+  "summary": {
+    "tagline": null,
+    "body": "copy verbatim from resume summary/objective section, else null",
+    "keywords": []
+  },
+  "skills": {
+    "technical": {
+      "languages": [],
+      "frameworks": [],
+      "databases": [],
+      "cloud_devops": [],
+      "tools": [],
+      "methodologies": []
+    },
+    "domain": {
+      "core": [],
+      "industry": [],
+      "tools": []
+    },
+    "soft": [],
+    "languages_spoken": []
+  },
+  "experience": [
+    {
+      "company": "string",
+      "company_url": null,
+      "industry": null,
+      "company_size": null,
+      "location": "string or null",
+      "employment_type": "Full-time|Part-time|Contract|Freelance|Internship — if stated, else null",
+      "roles": [
+        {
+          "title": "exact title as written",
+          "level": null,
+          "start_date": "YYYY-MM or null",
+          "end_date": "YYYY-MM or null — null if current",
+          "is_current": true,
+          "team_size": null,
+          "direct_reports": null,
+          "summary": null,
+          "achievements": [
+            {
+              "action": "first word if verb else null",
+              "task": "EXACT verbatim bullet text from resume",
+              "result": null,
+              "metric": "extract metric if explicitly in text else null",
+              "impact_area": null
+            }
+          ],
+          "tech_stack": []
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "exact as written",
+      "short": "abbreviation if present else null",
+      "field": "string or null",
+      "institution": "exact as written",
+      "location": "string or null",
+      "start_year": null,
+      "end_year": null,
+      "gpa": null,
+      "honors": null,
+      "relevant_courses": [],
+      "thesis": null
+    }
+  ],
+  "projects": [],
+  "certifications": [],
+  "awards": [],
+  "publications": [],
+  "volunteer": [],
+  "open_source": [],
+  "speaking": [],
+  "ats_metadata": {
+    "total_yoe": null,
+    "primary_skill": null,
+    "secondary_skills": [],
+    "industries": [],
+    "job_levels": [],
+    "notice_period": null,
+    "willing_to_relocate": null,
+    "visa_status": null
+  }
+}
+
+RESUME TEXT TO PARSE:
+`;
+
+/* ─── AI calls ─── */
+async function callAI(text,key,model){
+  const prompt=EXTRACT_PROMPT+text;
+  if(model==='claude'){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:8000,messages:[{role:'user',content:prompt}]})
+    });
+    if(!r.ok){const e=await r.json();throw new Error('Claude: '+(e.error?.message||r.status));}
+    const d=await r.json();return d.content[0].text;
+  }
+  if(model==='openai'){
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}})
+    });
+    if(!r.ok){const e=await r.json();throw new Error('OpenAI: '+(e.error?.message||r.status));}
+    const d=await r.json();return d.choices[0].message.content;
+  }
+  if(model==='groq'){
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],response_format:{type:'json_object'},temperature:0.3,max_completion_tokens:8000})
+    });
+    if(!r.ok){const e=await r.json();throw new Error('Groq: '+(e.error?.message||r.status));}
+    const d=await r.json();return d.choices[0].message.content;
+  }
+  if(model==='gemini'){
+    const geminiModel='gemini-3-flash-preview';
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:8000}})
+    });
+    if(!r.ok){const e=await r.json();throw new Error('Gemini: '+(e.error?.message||r.status));}
+    const d=await r.json();return d.candidates[0].content.parts[0].text;
+  }
+  throw new Error('Unknown model');
+}
+
+/* ─── Syntax colorizer ─── */
+function colorizeJSON(str){
+  // tokenize line by line for clean rendering
+  return str
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // keys
+    .replace(/"([^"\\]*(\\.[^"\\]*)*)"(\s*):/g,'<span class="jk">"$1"</span><span class="jc">$3:</span>')
+    // string values (after colon or in array)
+    .replace(/:\s*"([^"\\]*(\\.[^"\\]*)*)"/g,(m,v)=>`: <span class="js">"${v}"</span>`)
+    .replace(/^\s*"([^"\\]*(\\.[^"\\]*)*)"/gm,(m,v)=>{
+      // don't re-color keys
+      if(m.includes('<span')) return m;
+      return `<span class="js">"${v}"</span>`;
+    })
+    // numbers
+    .replace(/:\s*(-?\d+\.?\d*)/g,(m,n)=>`: <span class="jn">${n}</span>`)
+    // booleans
+    .replace(/:\s*(true|false)/g,(m,b)=>`: <span class="jb">${b}</span>`)
+    // null
+    .replace(/:\s*(null)/g,`: <span class="jz">null</span>`)
+    // braces & brackets
+    .replace(/([{}\[\]])/g,'<span class="jbr">$1</span>')
+    // commas at end of line
+    .replace(/,$/gm,'<span class="jc">,</span>');
+}
+
+/* ─── Render viewer ─── */
+function renderViewer(jsonStr){
+  const lines=jsonStr.split('\n');
+  const tbody=document.getElementById('cb');
+  tbody.innerHTML='';
+  lines.forEach((line,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="ln">${i+1}</td><td class="lc">${colorizeJSON(line)||'&nbsp;'}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('jv').style.display='block';
+  document.getElementById('out-empty').style.display='none';
+
+  // meta bar
+  const keys=(jsonStr.match(/"[^"]+"\s*:/g)||[]).length;
+  const secs=['meta','personal','summary','skills','experience','education','projects','certifications','awards','publications','volunteer','open_source','speaking','ats_metadata'].filter(s=>jsonStr.includes(`"${s}"`)).length;
+  document.getElementById('m-lines').textContent=lines.length.toLocaleString();
+  document.getElementById('m-keys').textContent=keys.toLocaleString();
+  document.getElementById('m-size').textContent=(new Blob([jsonStr]).size/1024).toFixed(1)+' KB';
+  document.getElementById('m-secs').textContent=secs;
+  document.getElementById('out-meta').classList.add('show');
+
+  // status dot
+  document.getElementById('sdot').classList.add('ready');
+
+  // download button
+  document.getElementById('dl-btn').disabled=false;
+}
+
+/* ─── Search ─── */
+let searchOpen=false;
+function toggleSearch(){
+  searchOpen=!searchOpen;
+  document.getElementById('search-bar').classList.toggle('show',searchOpen);
+  if(searchOpen) document.getElementById('search-inp').focus();
+  else{ clearSearch(); }
+}
+function clearSearch(){
+  document.querySelectorAll('.hl').forEach(e=>{
+    e.outerHTML=e.textContent;
+  });
+  document.getElementById('search-count').textContent='';
+}
+function doSearch(){
+  const q=document.getElementById('search-inp').value.trim();
+  // re-render first to clear old highlights
+  if(rawJSON) renderViewer(rawJSON);
+  if(!q){document.getElementById('search-count').textContent='';return;}
+  let count=0;
+  document.querySelectorAll('.lc').forEach(cell=>{
+    if(cell.innerHTML.toLowerCase().includes(q.toLowerCase())){
+      count++;
+      // simple text highlight — find in text nodes
+      cell.innerHTML=cell.innerHTML.replace(
+        new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),
+        '<span class="hl">$1</span>'
+      );
+    }
+  });
+  document.getElementById('search-count').textContent=count?`${count} match${count>1?'es':''}`:' no matches';
+}
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='f'&&rawJSON){
+    e.preventDefault(); toggleSearch();
+  }
+});
+
+/* ─── Copy ─── */
+function copyJSON(){
+  if(!rawJSON){return;}
+  navigator.clipboard.writeText(rawJSON).then(()=>{
+    const b=document.getElementById('copy-btn');
+    b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" width="12" height="12"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Copied!`;
+    setTimeout(()=>{b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" width="12" height="12" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Copy`;},1800);
+  });
+}
+
+/* ─── Download ─── */
+function dlJSON(){
+  if(!rawJSON) return;
+  const name=(parsedData?.personal?.full_name||'resume').replace(/\s+/g,'_').toLowerCase();
+  const blob=new Blob([rawJSON],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${name}_resume.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ─── Main ─── */
+async function run(){
+  clearErr();
+  const key=document.getElementById('api-key').value.trim();
+  document.getElementById('run-btn').disabled=true;
+  document.getElementById('pw').classList.add('show');
+
+  try{
+    // step 1 — read file
+    setProg(15,'active','','','');
+    const text=await readFile(selFile);
+    if(!text||text.length<30) throw new Error('Could not extract readable text from file. If it is a scanned PDF (image-based), text extraction is not possible.');
+
+    // step 2 — AI
+    setProg(35,'done','active','','');
+    const raw=await callAI(text,key,selModel);
+
+    // step 3 — parse
+    setProg(80,'done','done','active','');
+    const clean=raw.replace(/```json[\s\S]*?```/g,m=>m.slice(7,-3)).replace(/```/g,'').trim();
+    parsedData=JSON.parse(clean);
+    rawJSON=JSON.stringify(parsedData,null,2);
+
+    // step 4 — render
+    setProg(100,'done','done','done','active');
+    renderViewer(rawJSON);
+    setTimeout(()=>{
+      setProg(100,'done','done','done','done');
+    },400);
+
+  }catch(e){
+    showErr(e.message);
+    document.getElementById('pw').classList.remove('show');
+  }
+  document.getElementById('run-btn').disabled=false;
+}
+</script>
+</body>
+</html>

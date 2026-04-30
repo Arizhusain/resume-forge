@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeForge — AI Resume Optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ─── Reset ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ─── Design Tokens ─── */
+:root{
+  --ink:       #0D1117;
+  --ink-mid:   #3D4451;
+  --ink-soft:  #6B7385;
+  --ink-faint: #9AA0AE;
+  --rule:      #E2E5EC;
+  --surface:   #F8F9FB;
+  --card:      #FFFFFF;
+  --accent:    #1A56DB;
+  --accent-2:  #2563EB;
+  --accent-pale:#EEF2FF;
+  --gold:      #B45309;
+  --gold-pale: #FEF3C7;
+  --green:     #065F46;
+  --green-pale:#D1FAE5;
+  --red:       #9B1C1C;
+  --red-pale:  #FEE2E2;
+
+  --f-display: 'Cormorant Garamond', Georgia, serif;
+  --f-body:    'Syne', sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--f-body);
+  background:var(--surface);
+  color:var(--ink-mid);
+  min-height:100vh;
+  overflow-x:hidden;
+  line-height:1.6;
+}
+
+/* grain overlay */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+
+/* ─── App shell ─── */
+.shell{position:relative;z-index:1;display:grid;grid-template-columns:380px 1fr;min-height:100vh}
+
+/* ─── Left Panel (controls) ─── */
+.left{
+  background:var(--card);
+  border-right:1px solid var(--rule);
+  padding:40px 32px 60px;
+  display:flex;flex-direction:column;gap:28px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+
+.brand{display:flex;flex-direction:column;gap:4px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.brand-eyebrow{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.brand-name{font-family:var(--f-display);font-size:36px;font-weight:700;color:var(--ink);line-height:1}
+.brand-name span{color:var(--accent)}
+.brand-sub{font-size:12px;color:var(--ink-faint);margin-top:6px;line-height:1.5}
+
+/* Field label */
+.field-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
+
+/* Model selector */
+.model-row{display:flex;gap:8px}
+.model-btn{
+  flex:1;padding:9px 6px;font-family:var(--f-body);font-size:11px;font-weight:600;
+  border:1.5px solid var(--rule);border-radius:8px;background:var(--surface);
+  color:var(--ink-soft);cursor:pointer;transition:all .18s;text-align:center;letter-spacing:.3px;
+}
+.model-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-pale)}
+.model-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+
+/* API input */
+.api-wrap{position:relative}
+.api-input{
+  width:100%;padding:11px 40px 11px 14px;
+  border:1.5px solid var(--rule);border-radius:9px;
+  font-family:var(--f-mono);font-size:12px;
+  color:var(--ink);background:var(--surface);
+  outline:none;transition:border-color .2s;
+}
+.api-input:focus{border-color:var(--accent);background:#fff}
+.api-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--ink-faint);padding:2px;
+}
+.api-eye:hover{color:var(--ink-soft)}
+.api-note{font-size:10.5px;color:var(--ink-faint);font-family:var(--f-mono);margin-top:6px;line-height:1.5}
+.json-panel textarea.api-input{
+  min-height:150px;resize:vertical;line-height:1.45;padding-top:12px;padding-bottom:12px;
+  font-size:11px;white-space:pre;
+}
+.json-file-row{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.json-file-row input[type=file]{font-size:10px;max-width:100%}
+
+/* Upload zone */
+.upload-zone{
+  border:2px dashed var(--rule);border-radius:12px;
+  background:var(--surface);padding:32px 20px;
+  text-align:center;cursor:pointer;
+  transition:all .22s;position:relative;
+}
+.upload-zone:hover,.upload-zone.drag{
+  border-color:var(--accent);background:var(--accent-pale);
+  transform:translateY(-1px);box-shadow:var(--shadow-md);
+}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon-wrap{
+  width:52px;height:52px;margin:0 auto 12px;
+  background:var(--card);border:1.5px solid var(--rule);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-sm);
+}
+.upload-icon-wrap svg{width:22px;height:22px;stroke:var(--accent)}
+.upload-zone h3{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.upload-zone p{font-size:11px;color:var(--ink-faint)}
+.file-chip{
+  display:none;align-items:center;gap:8px;
+  background:var(--green-pale);border:1.5px solid #6EE7B7;
+  border-radius:8px;padding:9px 12px;margin-top:12px;text-align:left;
+}
+.file-chip-name{font-size:12px;font-weight:600;color:var(--green)}
+.file-chip-size{font-size:10px;color:#059669;margin-top:1px}
+
+/* CTA */
+.btn-go{
+  width:100%;padding:14px;
+  background:var(--ink);color:#fff;border:none;border-radius:10px;
+  font-family:var(--f-body);font-size:13px;font-weight:600;letter-spacing:.5px;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-go:hover:not(:disabled){background:var(--accent);box-shadow:0 4px 18px rgba(26,86,219,.3)}
+.btn-go:disabled{opacity:.45;cursor:not-allowed}
+
+/* Progress */
+.progress-block{display:none}
+.progress-block.show{display:block}
+.prog-header{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-bottom:6px}
+.prog-track{height:3px;background:var(--rule);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#60A5FA);border-radius:99px;width:0%;transition:width .5s ease}
+.steps{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.step{
+  font-size:10px;font-weight:500;padding:4px 9px;border-radius:99px;
+  border:1px solid var(--rule);color:var(--ink-faint);background:var(--card);
+  display:flex;align-items:center;gap:5px;transition:all .25s;
+}
+.step-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.step.active{border-color:var(--accent);color:var(--accent);background:var(--accent-pale)}
+.step.done{border-color:#6EE7B7;color:var(--green);background:var(--green-pale)}
+
+/* Error */
+.err{
+  padding:12px 14px;background:var(--red-pale);
+  border:1px solid #FCA5A5;border-radius:8px;
+  font-size:12px;color:var(--red);display:none;line-height:1.5;
+}
+.err.show{display:block}
+
+/* ─── Right Panel (output) ─── */
+.right{padding:40px 48px 80px;min-height:100vh;display:flex;flex-direction:column}
+
+.output-placeholder{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:16px;color:var(--ink-faint);
+}
+.output-placeholder svg{width:56px;height:56px;opacity:.25;stroke:var(--ink-faint)}
+.output-placeholder p{font-size:13px;text-align:center;max-width:280px;line-height:1.6}
+
+/* Result header */
+.result-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;
+}
+.result-title{
+  font-family:var(--f-display);font-size:22px;font-weight:700;color:var(--ink);
+  display:flex;align-items:center;gap:10px;
+}
+.result-badge{
+  font-family:var(--f-body);font-size:10px;font-weight:600;letter-spacing:1.2px;
+  text-transform:uppercase;padding:3px 9px;border-radius:99px;
+  background:var(--green-pale);color:var(--green);border:1px solid #6EE7B7;
+}
+.btn-dl{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 20px;background:var(--accent);color:#fff;
+  border:none;border-radius:9px;font-family:var(--f-body);
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;
+  box-shadow:0 2px 8px rgba(26,86,219,.2);
+}
+.btn-dl:hover{background:var(--ink);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.btn-dl:disabled{opacity:.6;cursor:not-allowed}
+
+/* ─── Resume Card ─── */
+.resume-wrap{display:none}
+.resume-wrap.show{display:block;animation:slideUp .4s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Suggestions card */
+.sug-wrap{
+  margin-top:24px;background:var(--card);border:1px solid var(--rule);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);
+  display:none;
+}
+.sug-wrap.show{display:block;animation:slideUp .4s ease .1s both}
+.sug-head{
+  padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--gold-pale);
+  font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  color:var(--gold);display:flex;align-items:center;gap:8px;
+}
+.sug-body{padding:16px 20px;display:flex;flex-direction:column;gap:0}
+.sug-item{
+  padding:9px 0;border-bottom:1px solid var(--rule);
+  font-size:13px;color:var(--ink-mid);line-height:1.6;
+}
+.sug-item:last-child{border-bottom:none;padding-bottom:0}
+.sug-item strong{color:var(--ink)}
+
+/* ════════════════════════════════════════════
+   RESUME OUTPUT — Professional PDF-style
+════════════════════════════════════════════ */
+#resume-doc{
+  background:#fff;
+  border-radius:16px;
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+  font-family:'Syne', sans-serif;
+}
+
+/* Accent strip at top */
+.r-topbar{height:5px;background:linear-gradient(90deg,#1A56DB 0%,#2563EB 40%,#60A5FA 100%)}
+
+.r-inner{padding:44px 52px 52px}
+
+/* Header */
+.r-header{margin-bottom:20px}
+.r-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:34px;font-weight:700;color:#0D1117;
+  letter-spacing:-.3px;margin-bottom:5px;line-height:1.1;
+}
+.r-tagline{font-size:12.5px;color:#1A56DB;font-weight:600;margin-bottom:8px;letter-spacing:.2px}
+.r-contact-row{
+  display:flex;flex-wrap:wrap;gap:4px 16px;
+  font-size:10.5px;color:#6B7385;line-height:1.8;
+}
+.r-contact-item{display:flex;align-items:center;gap:4px}
+.r-contact-item svg{width:10px;height:10px;stroke:#1A56DB;flex-shrink:0}
+.r-contact-item a{color:#1A56DB;text-decoration:none}
+.r-divider{border:none;border-top:2px solid #1A56DB;margin:16px 0 0}
+
+/* Section */
+.r-section{margin-top:20px}
+.r-sec-head{
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;
+}
+.r-sec-title{
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#0D1117;
+  white-space:nowrap;
+}
+.r-sec-rule{flex:1;height:1px;background:#E2E5EC}
+
+/* Summary */
+.r-summary{font-size:11px;color:#3D4451;line-height:1.8}
+.r-summary b{color:#0D1117}
+
+/* Skills */
+.r-skills-grid{display:flex;flex-direction:column;gap:5px}
+.r-skill-row{display:flex;gap:0;font-size:10.5px;line-height:1.6;align-items:baseline}
+.r-skill-cat{
+  color:#0D1117;font-weight:700;min-width:128px;flex-shrink:0;
+  font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;
+}
+.r-skill-sep{color:#1A56DB;margin-right:6px;font-weight:700}
+.r-skill-val{color:#3D4451;font-size:10.5px}
+
+/* Experience */
+.r-exp-block{margin-bottom:14px}
+.r-exp-block:last-child{margin-bottom:0}
+.r-company-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:5px;
+}
+.r-company-name{font-size:12px;font-weight:700;color:#1A56DB}
+.r-company-industry{
+  font-size:9.5px;color:#9AA0AE;background:#F8F9FB;
+  border:1px solid #E2E5EC;border-radius:4px;padding:2px 7px;
+}
+.r-role-block{padding-left:12px;border-left:2px solid #EEF2FF;margin-bottom:8px}
+.r-role-block:last-child{margin-bottom:0}
+.r-role-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.r-role-title{font-size:11px;font-weight:700;color:#0D1117}
+.r-role-meta{display:flex;gap:8px;align-items:center}
+.r-role-date{font-size:10px;color:#9AA0AE;font-style:italic}
+.r-role-badge{
+  font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;
+  background:#EEF2FF;color:#1A56DB;letter-spacing:.3px;
+}
+.r-role-badge.current{background:#D1FAE5;color:#065F46}
+.r-bullets{list-style:none;padding:0;margin:0}
+.r-bullets li{
+  font-size:10.5px;color:#3D4451;line-height:1.7;
+  padding-left:14px;position:relative;margin-bottom:2px;
+}
+.r-bullets li::before{
+  content:'▸';position:absolute;left:0;top:1px;
+  color:#1A56DB;font-size:9px;
+}
+.r-bullets li b{color:#0D1117}
+.r-role-stack{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}
+.r-tag{
+  font-size:9px;font-weight:500;padding:2px 7px;
+  border-radius:4px;background:#F8F9FB;
+  border:1px solid #E2E5EC;color:#6B7385;
+}
+
+/* Education */
+.r-edu-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px}
+.r-edu-deg{font-size:11px;font-weight:700;color:#0D1117}
+.r-edu-date{font-size:10px;color:#9AA0AE;font-style:italic}
+.r-edu-sub{font-size:10.5px;color:#6B7385;margin-bottom:4px}
+.r-edu-courses{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+
+/* Projects */
+.r-project-block{margin-bottom:10px;padding:10px 12px;background:#F8F9FB;border-radius:8px;border:1px solid #E2E5EC}
+.r-project-block:last-child{margin-bottom:0}
+.r-proj-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.r-proj-name{font-size:11px;font-weight:700;color:#0D1117}
+.r-proj-year{font-size:10px;color:#9AA0AE;font-style:italic}
+.r-proj-role{font-size:9.5px;color:#1A56DB;font-weight:600;margin-bottom:3px}
+.r-proj-desc{font-size:10.5px;color:#3D4451;line-height:1.65;margin-bottom:5px}
+.r-proj-outcomes{list-style:none;padding:0;margin:0 0 5px}
+.r-proj-outcomes li{font-size:10px;color:#6B7385;padding-left:12px;position:relative}
+.r-proj-outcomes li::before{content:'→';position:absolute;left:0;color:#1A56DB;font-size:9px}
+
+/* Certifications */
+.r-cert-grid{display:flex;flex-direction:column;gap:7px}
+.r-cert-item{display:flex;align-items:flex-start;gap:10px}
+.r-cert-dot{width:6px;height:6px;border-radius:50%;background:#1A56DB;flex-shrink:0;margin-top:5px}
+.r-cert-body{flex:1}
+.r-cert-name{font-size:10.5px;font-weight:700;color:#0D1117}
+.r-cert-meta{font-size:10px;color:#9AA0AE}
+
+/* Awards */
+.r-award-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.r-award-item:last-child{margin-bottom:0}
+.r-award-star{color:#B45309;font-size:12px;flex-shrink:0;line-height:1.4}
+.r-award-name{font-size:10.5px;font-weight:700;color:#0D1117}
+.r-award-meta{font-size:10px;color:#9AA0AE}
+
+/* Publications */
+.r-pub-item{margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #F0F2F5}
+.r-pub-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.r-pub-title{font-size:10.5px;font-weight:700;color:#0D1117;margin-bottom:2px}
+.r-pub-meta{font-size:10px;color:#9AA0AE}
+
+/* Volunteer / Speaking */
+.r-vol-item{margin-bottom:7px}
+.r-vol-item:last-child{margin-bottom:0}
+.r-vol-role{font-size:10.5px;font-weight:700;color:#0D1117}
+.r-vol-org{font-size:10px;color:#1A56DB}
+.r-vol-desc{font-size:10.5px;color:#3D4451;margin-top:2px;line-height:1.6}
+
+/* Open source */
+.r-oss-item{margin-bottom:6px}
+.r-oss-project{font-size:10.5px;font-weight:700;color:#0D1117}
+.r-oss-contrib{font-size:10.5px;color:#3D4451;margin-top:1px}
+.r-oss-impact{font-size:10px;color:#1A56DB;margin-top:1px}
+
+/* Languages */
+.r-lang-grid{display:flex;flex-wrap:wrap;gap:8px}
+.r-lang-item{
+  display:flex;flex-direction:column;align-items:center;
+  padding:7px 12px;background:#F8F9FB;
+  border:1px solid #E2E5EC;border-radius:8px;min-width:70px;
+}
+.r-lang-name{font-size:10px;font-weight:700;color:#0D1117}
+.r-lang-level{font-size:9px;color:#9AA0AE;margin-top:2px}
+
+/* Two-column layout for smaller sections */
+.r-two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+
+/* ─── Responsive ─── */
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .left{position:static;height:auto;padding:28px 20px 32px}
+  .right{padding:24px 20px 60px}
+  .r-inner{padding:28px 24px 32px}
+  .r-two-col{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ══════════════ LEFT PANEL ══════════════ -->
+  <aside class="left">
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-eyebrow">AI Powered</div>
+      <div class="brand-name">Resume<span>Forge</span></div>
+      <div class="brand-sub">Upload a PDF or paste structured JSON (same shape as ResumeForge JSON export). We rewrite, restructure and deliver a professional, ATS-ready document.</div>
+    </div>
+
+    <!-- Model -->
+    <div>
+      <div class="field-label">AI Provider</div>
+      <div class="model-row">
+        <button class="model-btn active" id="mb-claude" onclick="setModel('claude',this)">Claude</button>
+        <button class="model-btn" id="mb-openai" onclick="setModel('openai',this)">GPT-4o</button>
+        <button class="model-btn" id="mb-gemini" onclick="setModel('gemini',this)">Gemini</button>
+      </div>
+    </div>
+
+    <!-- API Key -->
+    <div>
+      <div class="field-label">API Key</div>
+      <div class="api-wrap">
+        <input class="api-input" type="password" id="api-key" placeholder="sk-…  or  AIza…" autocomplete="off" oninput="updateBtn()"/>
+        <button class="api-eye" onclick="toggleKey()" title="Show/hide">
+          <svg id="eye-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="api-note">🔒 Stays in your browser only — never stored.</div>
+    </div>
+
+    <!-- Resume source: PDF or JSON -->
+    <div>
+      <div class="field-label">Resume source</div>
+      <div class="model-row" style="margin-bottom:12px">
+        <button type="button" class="model-btn active source-tab" id="src-pdf" onclick="setInputMode('pdf',this)">PDF</button>
+        <button type="button" class="model-btn source-tab" id="src-json" onclick="setInputMode('json',this)">JSON</button>
+      </div>
+
+      <div id="panel-pdf">
+        <div class="field-label">Resume PDF</div>
+        <div class="upload-zone" id="drop-zone"
+             ondragover="ev.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="this.classList.remove('drag');handleFile(event.dataTransfer.files[0]);event.preventDefault()">
+          <input type="file" accept=".pdf" onchange="handleFile(this.files[0])"/>
+          <div class="upload-icon-wrap">
+            <svg fill="none" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h3>Drop PDF here</h3>
+          <p>or click to browse</p>
+          <div class="file-chip" id="file-chip">
+            <svg width="16" height="16" fill="none" stroke="#059669" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <div class="file-chip-name" id="fname"></div>
+              <div class="file-chip-size" id="fsize"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-json" class="json-panel" style="display:none">
+        <div class="field-label">Resume JSON</div>
+        <textarea class="api-input" id="json-input" placeholder='Paste JSON (meta, personal, summary, skills, experience, …)' autocomplete="off" oninput="onJsonInput()"></textarea>
+        <div class="json-file-row">
+          <span style="font-size:10px;color:var(--ink-faint)">Or load file:</span>
+          <input type="file" accept=".json,application/json" id="json-file" onchange="handleJsonFile(this.files[0])"/>
+        </div>
+        <div class="api-note">Use the same top-level keys as your <strong>resume-json</strong> export (values may differ). Invalid JSON is rejected before the AI step.</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="btn-go" id="go-btn" disabled onclick="runOptimize()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      Optimize My Resume
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-block" id="prog-block">
+      <div class="prog-header">
+        <span id="prog-txt">Starting…</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="steps">
+        <div class="step" id="s1"><div class="step-dot"></div>Extract</div>
+        <div class="step" id="s2"><div class="step-dot"></div>AI</div>
+        <div class="step" id="s3"><div class="step-dot"></div>Build</div>
+        <div class="step" id="s4"><div class="step-dot"></div>Done</div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="err" id="err-box"></div>
+  </aside>
+
+  <!-- ══════════════ RIGHT PANEL ══════════════ -->
+  <main class="right" id="right-panel">
+
+    <!-- Placeholder -->
+    <div class="output-placeholder" id="placeholder">
+      <svg fill="none" stroke-width="1.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p>Your optimized resume will appear here once you add a PDF or resume JSON and run the optimizer.</p>
+    </div>
+
+    <!-- Result header -->
+    <div id="result-header" style="display:none">
+      <div class="result-header">
+        <div class="result-title">
+          Optimized Resume
+          <span class="result-badge">ATS Ready</span>
+        </div>
+        <button class="btn-dl" id="dl-btn" onclick="downloadPDF()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Resume Output -->
+    <div class="resume-wrap" id="resume-wrap">
+      <div id="resume-doc">
+        <div class="r-topbar"></div>
+        <div class="r-inner" id="resume-inner"></div>
+      </div>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="sug-wrap" id="sug-wrap">
+      <div class="sug-head">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        AI Suggestions &amp; Tailored Headlines
+      </div>
+      <div class="sug-body" id="sug-body"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ─── globals ─── */
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let selFile=null, selModel='claude', inputMode='pdf';
+
+/* ─── helpers ─── */
+const $=id=>document.getElementById(id);
+function setModel(m,btn){
+  selModel=m;
+  document.querySelectorAll('.model-row .model-btn:not(.source-tab)').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setInputMode(mode,btn){
+  inputMode=mode;
+  document.querySelectorAll('.source-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  $('panel-pdf').style.display=mode==='pdf'?'block':'none';
+  $('panel-json').style.display=mode==='json'?'block':'none';
+  updateBtn();
+}
+function toggleKey(){
+  const inp=$('api-key');
+  inp.type=inp.type==='password'?'text':'password';
+}
+function handleFile(f){
+  if(!f||f.type!=='application/pdf'){showErr('Please upload a valid PDF file.');return;}
+  selFile=f;
+  $('file-chip').style.display='flex';
+  $('fname').textContent=f.name;
+  $('fsize').textContent=(f.size/1024).toFixed(1)+' KB';
+  updateBtn();
+}
+function onJsonInput(){ updateBtn(); }
+function handleJsonFile(f){
+  if(!f) return;
+  const ok=f.name.toLowerCase().endsWith('.json')||f.type==='application/json'||f.type==='text/json'||f.type==='';
+  if(!ok){ showErr('Please choose a .json file.'); return; }
+  const r=new FileReader();
+  r.onload=e=>{
+    $('json-input').value=e.target.result||'';
+    updateBtn();
+  };
+  r.onerror=()=>showErr('Could not read JSON file.');
+  r.readAsText(f);
+  $('json-file').value='';
+}
+function updateBtn(){
+  const keyOk=$('api-key').value.trim().length>10;
+  let srcOk=false;
+  if(inputMode==='pdf') srcOk=!!selFile;
+  else srcOk=$('json-input').value.trim().length>20;
+  $('go-btn').disabled=!(keyOk&&srcOk);
+}
+function showErr(m){const e=$('err-box');e.textContent='⚠ '+m;e.classList.add('show');}
+function clearErr(){$('err-box').classList.remove('show')}
+function setProg(pct,txt,step){
+  $('prog-fill').style.width=pct+'%';
+  $('prog-pct').textContent=pct+'%';
+  $('prog-txt').textContent=txt;
+  ['s1','s2','s3','s4'].forEach((id,i)=>{
+    const el=$(id); el.className='step';
+    if(i+1<step) el.classList.add('done');
+    else if(i+1===step) el.classList.add('active');
+  });
+}
+
+/* ─── PDF text extract ─── */
+async function extractText(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let txt='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const pg=await pdf.getPage(i);
+    const c=await pg.getTextContent();
+    txt+=c.items.map(s=>s.str).join(' ')+'\n';
+  }
+  return txt.trim();
+}
+
+/* ─── AI Prompt ─── */
+const PROMPT=`You are a world-class resume writer and hiring expert with 20+ years of experience across tech, non-tech, academic, creative, and executive roles.
+
+Analyze the provided resume text and return a comprehensive JSON object following the schema below. Only include fields where you have real data from the resume — never invent or hallucinate information.
+
+OPTIMIZATION GOALS:
+- Use strong action verbs for all bullet points
+- Keep metrics only if they actually appear in the resume (never fabricate)
+- If no metric exists, rewrite the bullet powerfully without one
+- Remove all fluff and passive language
+- Ensure every bullet communicates impact or value
+- Use relevant ATS keywords for the field/industry
+
+Return ONLY a raw JSON object — no markdown, no code fences, no explanation.
+
+JSON SCHEMA:
+{
+  "meta": {
+    "resume_type": "tech|non-tech|academic|creative|executive",
+    "target_role": "string",
+    "ats_optimized": true
+  },
+  "personal": {
+    "full_name": "string",
+    "preferred_name": "string or null",
+    "headline": "string — Role | Skill | Value prop",
+    "email": "string",
+    "phone": "string",
+    "location": { "city": "string", "state": "string", "country": "string", "remote_preference": "onsite|remote|hybrid" },
+    "links": { "linkedin": "string or null", "github": "string or null", "portfolio": "string or null", "website": "string or null", "behance": "string or null", "medium": "string or null" }
+  },
+  "summary": {
+    "tagline": "short memorable tagline",
+    "body": "3–4 sentence HTML string — use <b> tags for key phrases",
+    "keywords": ["keyword1","keyword2"]
+  },
+  "skills": {
+    "technical": { "languages": [], "frameworks": [], "databases": [], "cloud_devops": [], "tools": [], "methodologies": [] },
+    "domain": { "core": [], "industry": [], "tools": [] },
+    "soft": [],
+    "languages_spoken": [{ "language": "string", "proficiency": "Native|Fluent|Intermediate|Basic" }]
+  },
+  "experience": [
+    {
+      "company": "string",
+      "industry": "string or null",
+      "company_size": "string or null",
+      "location": "string",
+      "employment_type": "Full-time|Part-time|Contract|Freelance|Internship",
+      "roles": [
+        {
+          "title": "string",
+          "start_date": "YYYY-MM",
+          "end_date": "YYYY-MM or null",
+          "is_current": true,
+          "team_size": number or null,
+          "direct_reports": number or null,
+          "summary": "one-line role summary or null",
+          "achievements": [
+            { "action": "verb", "task": "what you did", "result": "outcome", "metric": "X% or null", "impact_area": "efficiency|revenue|engagement|quality|growth" }
+          ],
+          "tech_stack": []
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "string",
+      "short": "string or null",
+      "field": "string",
+      "institution": "string",
+      "location": "string",
+      "start_year": number,
+      "end_year": number or null,
+      "gpa": "string or null",
+      "honors": "string or null",
+      "relevant_courses": [],
+      "thesis": "string or null"
+    }
+  ],
+  "projects": [
+    {
+      "name": "string",
+      "type": "professional|personal|academic|open-source",
+      "role": "string or null",
+      "description": "string",
+      "tech_stack": [],
+      "outcomes": [],
+      "url": "string or null",
+      "github_url": "string or null",
+      "year": number or null
+    }
+  ],
+  "certifications": [
+    { "name": "string", "issuer": "string", "issued_date": "YYYY-MM or null", "expiry_date": "YYYY-MM or null", "credential_id": "string or null", "url": "string or null" }
+  ],
+  "awards": [
+    { "title": "string", "issuer": "string", "date": "YYYY-MM or null", "description": "string or null" }
+  ],
+  "publications": [
+    { "title": "string", "type": "article|journal|conference|blog|book|patent", "publisher": "string", "date": "YYYY-MM or null", "url": "string or null", "co_authors": [] }
+  ],
+  "volunteer": [
+    { "role": "string", "organization": "string", "start_date": "YYYY-MM or null", "end_date": "YYYY-MM or null", "description": "string or null" }
+  ],
+  "open_source": [
+    { "project": "string", "contribution": "string", "pr_url": "string or null", "impact": "string or null" }
+  ],
+  "speaking": [
+    { "event": "string", "talk_title": "string", "date": "YYYY-MM or null", "type": "conference|meetup|webinar|workshop|podcast", "url": "string or null" }
+  ],
+  "ats_metadata": {
+    "total_yoe": number,
+    "primary_skill": "string",
+    "secondary_skills": [],
+    "industries": [],
+    "notice_period": "string or null",
+    "willing_to_relocate": true,
+    "visa_status": "string or null"
+  },
+  "suggestions": ["suggestion strings"],
+  "headlines": ["headline 1", "headline 2", "headline 3"]
+}
+
+CRITICAL: Only populate arrays/objects where you have real data. Use null or empty arrays [] for missing data. Never fabricate anything.`;
+
+/* ─── AI API calls ─── */
+async function callAI(text,key,model,opts={}){
+  const fromJson=opts.fromJson===true;
+  const inputBlock=fromJson
+    ? 'STRUCTURED RESUME INPUT (JSON from extraction export — use as the only source of facts; optimize into the schema below):\n'+text
+    : 'RESUME TEXT:\n'+text;
+  const fullPrompt=PROMPT+'\n\n'+inputBlock;
+  if(model==='claude'){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:6000,messages:[{role:'user',content:fullPrompt}]})
+    });
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Claude API error '+r.status);}
+    const d=await r.json();return d.content[0].text;
+  }
+  if(model==='openai'){
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'user',content:fullPrompt}],response_format:{type:'json_object'}})
+    });
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'OpenAI API error');}
+    const d=await r.json();return d.choices[0].message.content;
+  }
+  if(model==='gemini'){
+    const geminiModel='gemini-3-flash-preview';
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:fullPrompt}]}],generationConfig:{temperature:0.3,maxOutputTokens:6000}})
+    });
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Gemini API error');}
+    const d=await r.json();return d.candidates[0].content.parts[0].text;
+  }
+}
+
+/* ─── Tiny render helpers ─── */
+function has(v){ return v!==null && v!==undefined && v!=='' && !(Array.isArray(v)&&v.length===0); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(d){ if(!d) return ''; const [y,m]=String(d).split('-'); const ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return m?`${ms[parseInt(m)-1]} ${y}`:y; }
+function tags(arr){ return arr.filter(Boolean).map(t=>`<span class="r-tag">${esc(t)}</span>`).join(''); }
+
+/* ─── Resume renderer ─── */
+function renderResume(d){
+  let h='';
+
+  /* ── Personal / Header ── */
+  const p=d.personal||{};
+  const loc=p.location||{};
+  const links=p.links||{};
+
+  h+=`<div class="r-header">`;
+  if(has(p.full_name))  h+=`<div class="r-name">${esc(p.full_name)}</div>`;
+  if(has(p.headline))   h+=`<div class="r-tagline">${esc(p.headline)}</div>`;
+
+  // contact row
+  const ci=[];
+  if(has(p.email))   ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>${esc(p.email)}</span>`);
+  if(has(p.phone))   ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${esc(p.phone)}</span>`);
+  const locStr=[loc.city,loc.state,loc.country].filter(Boolean).join(', ');
+  if(locStr) ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${esc(locStr)}</span>`);
+  if(has(links.linkedin)) ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg><a href="https://${links.linkedin}" target="_blank">LinkedIn</a></span>`);
+  if(has(links.github))   ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg><a href="https://${links.github}" target="_blank">GitHub</a></span>`);
+  if(has(links.portfolio)) ci.push(`<span class="r-contact-item">🔗<a href="${links.portfolio}" target="_blank">Portfolio</a></span>`);
+  if(has(links.medium))    ci.push(`<span class="r-contact-item">✍<a href="${links.medium}" target="_blank">Medium</a></span>`);
+
+  if(ci.length) h+=`<div class="r-contact-row">${ci.join('')}</div>`;
+  h+=`<hr class="r-divider"/></div>`;
+
+  /* ── Summary ── */
+  const sm=d.summary||{};
+  if(has(sm.body)||has(sm.tagline)){
+    h+=section('Professional Summary');
+    if(has(sm.tagline)) h+=`<div style="font-size:11px;font-weight:700;color:#1A56DB;margin-bottom:5px;font-style:italic">${esc(sm.tagline)}</div>`;
+    if(has(sm.body))    h+=`<div class="r-summary">${sm.body}</div>`;
+    if(has(sm.keywords)&&sm.keywords.length) h+=`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${sm.keywords.map(k=>`<span class="r-tag" style="background:#EEF2FF;border-color:#C7D7FD;color:#1A56DB">${esc(k)}</span>`).join('')}</div>`;
+  }
+
+  /* ── Skills ── */
+  const sk=d.skills||{};
+  const tech=sk.technical||{};
+  const dom=sk.domain||{};
+  const allSkillRows=[];
+  if(has(tech.languages)&&tech.languages.length)    allSkillRows.push(['Languages',    tech.languages.join(', ')]);
+  if(has(tech.frameworks)&&tech.frameworks.length)  allSkillRows.push(['Frameworks',   tech.frameworks.join(', ')]);
+  if(has(tech.databases)&&tech.databases.length)    allSkillRows.push(['Databases',    tech.databases.join(', ')]);
+  if(has(tech.cloud_devops)&&tech.cloud_devops.length) allSkillRows.push(['Cloud / DevOps',tech.cloud_devops.join(', ')]);
+  if(has(tech.tools)&&tech.tools.length)            allSkillRows.push(['Tools',        tech.tools.join(', ')]);
+  if(has(tech.methodologies)&&tech.methodologies.length) allSkillRows.push(['Methodologies',tech.methodologies.join(', ')]);
+  if(has(dom.core)&&dom.core.length)                allSkillRows.push(['Core Skills',  dom.core.join(', ')]);
+  if(has(dom.industry)&&dom.industry.length)        allSkillRows.push(['Industry',     dom.industry.join(', ')]);
+  if(has(dom.tools)&&dom.tools.length)              allSkillRows.push(['Domain Tools', dom.tools.join(', ')]);
+  if(has(sk.soft)&&sk.soft.length)                  allSkillRows.push(['Soft Skills',  sk.soft.join(', ')]);
+
+  if(allSkillRows.length){
+    h+=section('Core Skills');
+    h+='<div class="r-skills-grid">';
+    allSkillRows.forEach(([cat,val])=>{
+      h+=`<div class="r-skill-row"><span class="r-skill-cat">${esc(cat)}</span><span class="r-skill-sep">›</span><span class="r-skill-val">${esc(val)}</span></div>`;
+    });
+    h+='</div>';
+  }
+  if(has(sk.languages_spoken)&&sk.languages_spoken.length){
+    h+=`<div style="margin-top:10px"><div class="r-lang-grid">`;
+    sk.languages_spoken.forEach(l=>{
+      if(has(l.language)) h+=`<div class="r-lang-item"><div class="r-lang-name">${esc(l.language)}</div><div class="r-lang-level">${esc(l.proficiency||'')}</div></div>`;
+    });
+    h+='</div></div>';
+  }
+
+  /* ── Experience ── */
+  if(has(d.experience)&&d.experience.length){
+    h+=section('Professional Experience');
+    d.experience.forEach(co=>{
+      if(!has(co.company)) return;
+      h+=`<div class="r-exp-block"><div class="r-company-row"><span class="r-company-name">${esc(co.company)}</span>`;
+      if(has(co.industry)) h+=`<span class="r-company-industry">${esc(co.industry)}</span>`;
+      h+=`</div>`;
+      const roles=co.roles||[];
+      roles.forEach(r=>{
+        h+=`<div class="r-role-block"><div class="r-role-header"><span class="r-role-title">${esc(r.title||'')}</span><div class="r-role-meta">`;
+        const ds=fmtDate(r.start_date), de=r.is_current?'Present':fmtDate(r.end_date);
+        if(ds||de) h+=`<span class="r-role-date">${ds}${ds&&de?' – ':''}${de}</span>`;
+        if(r.is_current) h+=`<span class="r-role-badge current">Current</span>`;
+        else if(has(co.employment_type)) h+=`<span class="r-role-badge">${esc(co.employment_type)}</span>`;
+        h+=`</div></div>`;
+        const meta=[];
+        if(r.team_size>0)      meta.push(`Team of ${r.team_size}`);
+        if(r.direct_reports>0) meta.push(`${r.direct_reports} direct reports`);
+        if(has(co.location))   meta.push(esc(co.location));
+        if(meta.length) h+=`<div style="font-size:9.5px;color:#9AA0AE;margin-bottom:5px">${meta.join(' · ')}</div>`;
+        if(has(r.summary)) h+=`<div style="font-size:10.5px;color:#6B7385;font-style:italic;margin-bottom:4px">${esc(r.summary)}</div>`;
+        const ach=r.achievements||[];
+        if(ach.length){
+          h+='<ul class="r-bullets">';
+          ach.forEach(a=>{
+            let bullet=`${esc(a.action||'')} ${esc(a.task||'')}`;
+            if(has(a.result)) bullet+=` — <b>${esc(a.result)}</b>`;
+            else if(has(a.metric)) bullet+=` (<b>${esc(a.metric)}</b>)`;
+            h+=`<li>${bullet}</li>`;
+          });
+          h+='</ul>';
+        }
+        if(has(r.tech_stack)&&r.tech_stack.length) h+=`<div class="r-role-stack">${tags(r.tech_stack)}</div>`;
+        h+='</div>';
+      });
+      h+='</div>';
+    });
+  }
+
+  /* ── Two-col wrapper: Education + Certifications + Awards (side by side if both present) ── */
+  const hasEdu  = has(d.education)&&d.education.length;
+  const hasCert = has(d.certifications)&&d.certifications.length;
+  const hasAward= has(d.awards)&&d.awards.length;
+
+  if(hasEdu){
+    h+=section('Education');
+    d.education.forEach(e=>{
+      h+=`<div style="margin-bottom:10px">`;
+      h+=`<div class="r-edu-row"><span class="r-edu-deg">${esc(e.degree||'')}${has(e.short)?` <span style="font-weight:400;color:#9AA0AE">(${esc(e.short)})</span>`:''}</span><span class="r-edu-date">${e.start_year||''}${e.end_year?` – ${e.end_year}`:''}</span></div>`;
+      const inst=[e.institution,e.location].filter(Boolean).join(' · ');
+      if(inst) h+=`<div class="r-edu-sub">${esc(inst)}</div>`;
+      if(has(e.field)) h+=`<div class="r-edu-sub" style="color:#1A56DB">${esc(e.field)}</div>`;
+      const badges=[];
+      if(has(e.gpa))    badges.push(`GPA: ${e.gpa}`);
+      if(has(e.honors)) badges.push(e.honors);
+      if(badges.length) h+=`<div style="margin-top:4px;display:flex;gap:6px">${badges.map(b=>`<span class="r-tag" style="background:#EEF2FF;color:#1A56DB;border-color:#C7D7FD">${esc(b)}</span>`).join('')}</div>`;
+      if(has(e.relevant_courses)&&e.relevant_courses.length) h+=`<div class="r-edu-courses">${tags(e.relevant_courses)}</div>`;
+      if(has(e.thesis)) h+=`<div style="font-size:10px;color:#6B7385;margin-top:4px"><b>Thesis:</b> ${esc(e.thesis)}</div>`;
+      h+='</div>';
+    });
+  }
+
+  /* ── Projects ── */
+  if(has(d.projects)&&d.projects.length){
+    h+=section('Projects');
+    d.projects.forEach(pr=>{
+      if(!has(pr.name)) return;
+      h+=`<div class="r-project-block"><div class="r-proj-header"><span class="r-proj-name">${esc(pr.name)}</span>`;
+      const pmeta=[];
+      if(has(pr.year)) pmeta.push(String(pr.year));
+      if(has(pr.type)) pmeta.push(pr.type);
+      if(pmeta.length) h+=`<span class="r-proj-year">${esc(pmeta.join(' · '))}</span>`;
+      h+=`</div>`;
+      if(has(pr.role))        h+=`<div class="r-proj-role">${esc(pr.role)}</div>`;
+      if(has(pr.description)) h+=`<div class="r-proj-desc">${esc(pr.description)}</div>`;
+      if(has(pr.outcomes)&&pr.outcomes.length){
+        h+='<ul class="r-proj-outcomes">';
+        pr.outcomes.forEach(o=>{ h+=`<li>${esc(o)}</li>`; });
+        h+='</ul>';
+      }
+      const plinks=[];
+      if(has(pr.url))        plinks.push(`<a href="${pr.url}" target="_blank" style="font-size:9.5px;color:#1A56DB">🔗 Live</a>`);
+      if(has(pr.github_url)) plinks.push(`<a href="${pr.github_url}" target="_blank" style="font-size:9.5px;color:#1A56DB">⌥ GitHub</a>`);
+      if(plinks.length) h+=`<div style="display:flex;gap:12px;margin-top:4px">${plinks.join('')}</div>`;
+      if(has(pr.tech_stack)&&pr.tech_stack.length) h+=`<div class="r-role-stack" style="margin-top:6px">${tags(pr.tech_stack)}</div>`;
+      h+='</div>';
+    });
+  }
+
+  /* ── Certifications ── */
+  if(hasCert){
+    h+=section('Certifications');
+    h+='<div class="r-cert-grid">';
+    d.certifications.forEach(c=>{
+      if(!has(c.name)) return;
+      h+=`<div class="r-cert-item"><div class="r-cert-dot"></div><div class="r-cert-body"><div class="r-cert-name">${esc(c.name)}</div>`;
+      const cmeta=[c.issuer, fmtDate(c.issued_date)].filter(Boolean).join(' · ');
+      if(cmeta) h+=`<div class="r-cert-meta">${esc(cmeta)}`;
+      if(has(c.expiry_date)) h+=` <span style="color:#B45309">· Expires ${esc(fmtDate(c.expiry_date))}</span>`;
+      if(cmeta) h+=`</div>`;
+      if(has(c.url)) h+=`<a href="${c.url}" target="_blank" style="font-size:9.5px;color:#1A56DB">View credential →</a>`;
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  /* ── Awards ── */
+  if(hasAward){
+    h+=section('Awards & Recognition');
+    d.awards.forEach(a=>{
+      if(!has(a.title)) return;
+      h+=`<div class="r-award-item"><span class="r-award-star">★</span><div><div class="r-award-name">${esc(a.title)}</div>`;
+      const am=[a.issuer, fmtDate(a.date)].filter(Boolean).join(' · ');
+      if(am) h+=`<div class="r-award-meta">${esc(am)}</div>`;
+      if(has(a.description)) h+=`<div style="font-size:10.5px;color:#3D4451;margin-top:2px">${esc(a.description)}</div>`;
+      h+='</div></div>';
+    });
+  }
+
+  /* ── Publications ── */
+  if(has(d.publications)&&d.publications.length){
+    h+=section('Publications');
+    d.publications.forEach(pub=>{
+      if(!has(pub.title)) return;
+      h+=`<div class="r-pub-item"><div class="r-pub-title">${esc(pub.title)}</div>`;
+      const pm=[pub.type, pub.publisher, fmtDate(pub.date)].filter(Boolean).join(' · ');
+      if(pm) h+=`<div class="r-pub-meta">${esc(pm)}</div>`;
+      if(has(pub.co_authors)&&pub.co_authors.length) h+=`<div style="font-size:10px;color:#6B7385">With: ${pub.co_authors.join(', ')}</div>`;
+      if(has(pub.url)) h+=`<a href="${pub.url}" target="_blank" style="font-size:9.5px;color:#1A56DB">Read →</a>`;
+      h+='</div>';
+    });
+  }
+
+  /* ── Open Source ── */
+  if(has(d.open_source)&&d.open_source.length){
+    h+=section('Open Source');
+    d.open_source.forEach(os=>{
+      if(!has(os.project)) return;
+      h+=`<div class="r-oss-item"><div class="r-oss-project">${esc(os.project)}</div>`;
+      if(has(os.contribution)) h+=`<div class="r-oss-contrib">${esc(os.contribution)}</div>`;
+      if(has(os.impact))       h+=`<div class="r-oss-impact">${esc(os.impact)}</div>`;
+      if(has(os.pr_url))       h+=`<a href="${os.pr_url}" target="_blank" style="font-size:9.5px;color:#1A56DB">View PR →</a>`;
+      h+='</div>';
+    });
+  }
+
+  /* ── Volunteer ── */
+  if(has(d.volunteer)&&d.volunteer.length){
+    h+=section('Volunteer & Community');
+    d.volunteer.forEach(v=>{
+      if(!has(v.role)) return;
+      h+=`<div class="r-vol-item"><div class="r-vol-role">${esc(v.role)}</div>`;
+      const vo=[v.organization, fmtDate(v.start_date), v.end_date?fmtDate(v.end_date):'Present'].filter(Boolean).join(' · ');
+      if(vo) h+=`<div class="r-vol-org">${esc(vo)}</div>`;
+      if(has(v.description)) h+=`<div class="r-vol-desc">${esc(v.description)}</div>`;
+      h+='</div>';
+    });
+  }
+
+  /* ── Speaking ── */
+  if(has(d.speaking)&&d.speaking.length){
+    h+=section('Speaking & Presentations');
+    d.speaking.forEach(s=>{
+      if(!has(s.event)) return;
+      h+=`<div class="r-vol-item"><div class="r-vol-role">${esc(s.talk_title||s.event)}</div>`;
+      const sm=[s.event, s.type, fmtDate(s.date)].filter(Boolean).join(' · ');
+      if(sm) h+=`<div class="r-vol-org">${esc(sm)}</div>`;
+      if(has(s.url)) h+=`<a href="${s.url}" target="_blank" style="font-size:9.5px;color:#1A56DB">Watch →</a>`;
+      h+='</div>';
+    });
+  }
+
+  $('resume-inner').innerHTML=h;
+
+  /* ── Suggestions ── */
+  const hasSug=(has(d.suggestions)&&d.suggestions.length)||(has(d.headlines)&&d.headlines.length);
+  if(hasSug){
+    let sh='';
+    if(has(d.headlines)&&d.headlines.length){
+      sh+=`<div class="sug-item"><strong>🎯 Tailored Resume Headlines</strong></div>`;
+      d.headlines.forEach(hl=>{ sh+=`<div class="sug-item">&rsaquo; ${esc(hl)}</div>`; });
+    }
+    if(has(d.suggestions)&&d.suggestions.length){
+      sh+=`<div class="sug-item" style="padding-top:12px"><strong>💡 Improvement Suggestions</strong></div>`;
+      d.suggestions.forEach(s=>{ sh+=`<div class="sug-item">&rsaquo; ${esc(s)}</div>`; });
+    }
+    if(has(d.ats_metadata)){
+      const m=d.ats_metadata;
+      const bits=[];
+      if(m.total_yoe>0) bits.push(`${m.total_yoe} YoE`);
+      if(has(m.primary_skill)) bits.push(`Primary: ${m.primary_skill}`);
+      if(has(m.notice_period)) bits.push(`Notice: ${m.notice_period}`);
+      if(bits.length) sh+=`<div class="sug-item" style="padding-top:12px"><strong>📊 ATS Metadata</strong> &nbsp; <span style="font-size:12px;color:#6B7385">${bits.join(' · ')}</span></div>`;
+      if(has(m.secondary_skills)&&m.secondary_skills.length) sh+=`<div class="sug-item">&rsaquo; Secondary skills: ${m.secondary_skills.join(', ')}</div>`;
+      if(has(m.industries)&&m.industries.length) sh+=`<div class="sug-item">&rsaquo; Industries: ${m.industries.join(', ')}</div>`;
+    }
+    $('sug-body').innerHTML=sh;
+    $('sug-wrap').classList.add('show');
+  }
+}
+
+/* ── section header builder ── */
+function section(title){
+  return `<div class="r-section"><div class="r-sec-head"><span class="r-sec-title">${title}</span><div class="r-sec-rule"></div></div>`;
+}
+
+/* ─── Download ─── */
+async function downloadPDF(){
+  const btn=$('dl-btn');
+  btn.disabled=true; btn.textContent='Generating…';
+  try{
+    const {jsPDF}=window.jspdf;
+    const el=$('resume-doc');
+    const canvas=await html2canvas(el,{scale:2.5,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    const img=canvas.toDataURL('image/png');
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pW=pdf.internal.pageSize.getWidth();
+    const pH=pdf.internal.pageSize.getHeight();
+    const iH=(canvas.height*pW)/canvas.width;
+    let y=0;
+    while(y<iH){if(y>0)pdf.addPage();pdf.addImage(img,'PNG',0,-y,pW,iH);y+=pH;}
+    const name=(document.querySelector('.r-name')?.textContent||'Resume').replace(/\s+/g,'_');
+    pdf.save(`${name}_Optimized.pdf`);
+  }catch(e){showErr('PDF download failed: '+e.message);}
+  btn.disabled=false;
+  btn.innerHTML=`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Download PDF`;
+}
+
+/* ─── Main flow ─── */
+async function runOptimize(){
+  clearErr();
+  const key=$('api-key').value.trim();
+  $('go-btn').disabled=true;
+  $('prog-block').classList.add('show');
+  $('placeholder').style.display='none';
+  $('result-header').style.display='none';
+  $('resume-wrap').classList.remove('show');
+  $('sug-wrap').classList.remove('show');
+
+  try{
+    let payload, fromJson=false;
+    if(inputMode==='pdf'){
+      setProg(12,'Extracting text from PDF…',1);
+      payload=await extractText(selFile);
+      if(!payload||payload.length<40) throw new Error('Could not extract text. Make sure your PDF is text-based (not a scanned image).');
+    }else{
+      setProg(12,'Validating resume JSON…',1);
+      const rawJ=$('json-input').value.trim();
+      let parsed;
+      try{ parsed=JSON.parse(rawJ); }
+      catch(err){ throw new Error('Invalid JSON: '+err.message); }
+      if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)) throw new Error('JSON must be a single object.');
+      const hasResumeShape=('personal'in parsed)||('experience'in parsed)||('summary'in parsed)||('skills'in parsed);
+      if(!hasResumeShape) throw new Error('JSON must look like resume data (e.g. personal, experience, summary, or skills).');
+      payload=JSON.stringify(parsed,null,2);
+      fromJson=true;
+    }
+
+    setProg(30,'Sending to AI for deep optimization…',2);
+    const raw=await callAI(payload,key,selModel,{fromJson});
+
+    setProg(75,'Building professional resume…',3);
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const data=JSON.parse(clean);
+    renderResume(data);
+
+    setProg(100,'Done!',4);
+    $('result-header').style.display='block';
+    $('resume-wrap').classList.add('show');
+    $('right-panel').scrollTo({top:0,behavior:'smooth'});
+
+  }catch(e){
+    showErr(e.message);
+    $('placeholder').style.display='flex';
+  }
+  $('go-btn').disabled=false;
+}
+</script>
+</body>
+</html>

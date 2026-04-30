@@ -1,0 +1,12 @@
+{
+    "personal":       { "full_name", "headline", "email", "phone", "location", "links" },
+    "summary":        { "tagline", "body", "keywords" },
+    "skills":         { "technical" | "domain", "soft" },
+    "experience":     [ { "company", "roles": [{ "title", "dates", "achievements" }] } ],
+    "education":      [ { "degree", "institution", "year" } ],
+    "certifications": [ { "name", "issuer", "date" } ]
+  }
+  
+  // ─── All other sections are optional ─────────────────
+  // projects, publications, volunteer, open_source,
+  // speaking, awards, ats_metadata

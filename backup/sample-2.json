@@ -1,0 +1,284 @@
+{
+    "meta": {
+      "resume_type": "tech",
+      "target_role": "Senior Frontend Developer / Lead Developer",
+      "ats_optimized": true
+    },
+    "personal": {
+      "full_name": "Arifhusain Soudagar",
+      "preferred_name": "Arifhusain",
+      "headline": "Senior Frontend Developer | React.js Specialist | AI Integration",
+      "email": "arifhusainsoudagar01@gmail.com",
+      "phone": "7358236715",
+      "location": {
+        "city": "Dharwad",
+        "state": "Karnataka",
+        "country": "India",
+        "remote_preference": null
+      },
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/arifhusain-soudagar-b8348a273",
+        "github": null,
+        "portfolio": null,
+        "website": null,
+        "behance": null,
+        "medium": null
+      }
+    },
+    "summary": {
+      "tagline": "Results-oriented Frontend Lead with 8+ years of expertise in React.js and AI-driven web solutions.",
+      "body": "Highly motivated <b>Senior Frontend Developer</b> with over 8 years of experience delivering high-quality, user-centric web applications. Proven expertise in <b>React.js</b>, state management, and <b>AI tool integration</b>. Demonstrated track record of driving <b>30% ROI growth</b> and enhancing user engagement through scalable architecture and modern UI frameworks.",
+      "keywords": [
+        "React.js",
+        "Frontend Development",
+        "State Management",
+        "UI/UX Optimization",
+        "AI Integration"
+      ]
+    },
+    "skills": {
+      "technical": {
+        "languages": [
+          "JavaScript",
+          "HTML5",
+          "CSS3",
+          "Python"
+        ],
+        "frameworks": [
+          "React.js",
+          "Express.js",
+          "Django"
+        ],
+        "databases": [],
+        "cloud_devops": [],
+        "tools": [
+          "MUI (Material UI)",
+          "React Hooks",
+          "React-Router",
+          "Styled-components",
+          "Context API",
+          "TTS (Text-to-Speech)"
+        ],
+        "methodologies": [
+          "Component-Based Architecture",
+          "MVT (Model-View-Template)",
+          "Agile"
+        ]
+      },
+      "domain": {
+        "core": [
+          "Frontend Architecture",
+          "State Management",
+          "UI Component Design"
+        ],
+        "industry": [
+          "E-commerce",
+          "EdTech",
+          "IT Services"
+        ],
+        "tools": [
+          "Artificial Intelligence (AI)"
+        ]
+      },
+      "soft": [
+        "Leadership",
+        "Project Facilitation",
+        "Problem Solving",
+        "Stakeholder Management"
+      ],
+      "languages_spoken": []
+    },
+    "experience": [
+      {
+        "company": "Cognizant",
+        "industry": "IT Services",
+        "company_size": "10,000+",
+        "location": "Bengaluru, India",
+        "employment_type": "Full-time",
+        "roles": [
+          {
+            "title": "Senior Associate (Lead Developer)",
+            "start_date": "2025-07",
+            "end_date": null,
+            "is_current": true,
+            "team_size": null,
+            "direct_reports": null,
+            "summary": "Leading frontend initiatives and architectural decisions for complex web applications.",
+            "achievements": [
+              {
+                "action": "Architected",
+                "task": "reusable UI components and state management systems",
+                "result": "ensured scalable and maintainable React-based application architecture",
+                "metric": null,
+                "impact_area": "quality"
+              }
+            ],
+            "tech_stack": [
+              "React.js",
+              "MUI"
+            ]
+          },
+          {
+            "title": "Associate - Projects",
+            "start_date": "2022-02",
+            "end_date": "2025-07",
+            "is_current": false,
+            "team_size": null,
+            "direct_reports": null,
+            "summary": "Developed high-performance frontend solutions and integrated AI capabilities into educational platforms.",
+            "achievements": [
+              {
+                "action": "Integrated",
+                "task": "AI study tools into eTextbooks, providing automated summaries and practice questions",
+                "result": "empowered students with seamless AI-driven learning materials",
+                "metric": null,
+                "impact_area": "engagement"
+              },
+              {
+                "action": "Optimized",
+                "task": "frontend project delivery and UI development using MUI pre-built components",
+                "result": "drove a 30% increase in ROI and earned Employee of the Month recognition",
+                "metric": "30%",
+                "impact_area": "revenue"
+              },
+              {
+                "action": "Standardized",
+                "task": "development documentation including flowcharts, layouts, and code comments",
+                "result": "reduced deployment errors and improved team coding clarity",
+                "metric": null,
+                "impact_area": "efficiency"
+              }
+            ],
+            "tech_stack": [
+              "React.js",
+              "MUI",
+              "AI Tools"
+            ]
+          }
+        ]
+      },
+      {
+        "company": "Accenture",
+        "industry": "IT Services",
+        "company_size": "10,000+",
+        "location": "Bengaluru, India",
+        "employment_type": "Full-time",
+        "roles": [
+          {
+            "title": "Software Engineer Analyst",
+            "start_date": "2016-07",
+            "end_date": "2022-02",
+            "is_current": false,
+            "team_size": null,
+            "direct_reports": null,
+            "summary": "Focused on building maintainable e-commerce and dashboard platforms using React and Django.",
+            "achievements": [
+              {
+                "action": "Developed",
+                "task": "user-friendly web applications using React, JavaScript, and CSS",
+                "result": "strengthened user engagement across client platforms",
+                "metric": "30%",
+                "impact_area": "engagement"
+              },
+              {
+                "action": "Engineered",
+                "task": "high-performance e-commerce components using React Hooks, Router, and Styled-components",
+                "result": "enhanced platform conversion rates",
+                "metric": "20%",
+                "impact_area": "growth"
+              },
+              {
+                "action": "Implemented",
+                "task": "advanced state management utilizing Context API",
+                "result": "optimized rendering speed and bolstered scalability for large-scale applications",
+                "metric": null,
+                "impact_area": "efficiency"
+              },
+              {
+                "action": "Leveraged",
+                "task": "Django Model-View-Template (MVT) architecture",
+                "result": "improved user engagement for e-commerce dashboard projects",
+                "metric": "20%",
+                "impact_area": "engagement"
+              }
+            ],
+            "tech_stack": [
+              "React.js",
+              "JavaScript",
+              "Django",
+              "Context API",
+              "Styled-components"
+            ]
+          }
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor of Computer Applications",
+        "short": "BCA",
+        "field": "Computer Programming, Specific Applications",
+        "institution": "Karnataka University, Dharwad",
+        "location": "Dharwad, India",
+        "start_year": 2013,
+        "end_year": 2016,
+        "gpa": null,
+        "honors": null,
+        "relevant_courses": [],
+        "thesis": null
+      }
+    ],
+    "projects": [],
+    "certifications": [
+      {
+        "name": "Pearson+ Hackathon Finalist",
+        "issuer": "Pearson",
+        "issued_date": null,
+        "expiry_date": null,
+        "credential_id": null,
+        "url": null
+      }
+    ],
+    "awards": [
+      {
+        "title": "Employee of the Month",
+        "issuer": "Cognizant",
+        "date": null,
+        "description": "Recognized by leadership, managers, and clients for surpassing project expectations."
+      }
+    ],
+    "publications": [],
+    "volunteer": [],
+    "open_source": [],
+    "speaking": [],
+    "ats_metadata": {
+      "total_yoe": 8,
+      "primary_skill": "React.js",
+      "secondary_skills": [
+        "JavaScript",
+        "MUI",
+        "Django",
+        "State Management",
+        "AI Integration"
+      ],
+      "industries": [
+        "IT Services",
+        "E-commerce",
+        "EdTech"
+      ],
+      "notice_period": null,
+      "willing_to_relocate": true,
+      "visa_status": null
+    },
+    "suggestions": [
+      "Clarify the 'July 2025' start date for the Senior Associate role, as it appears to be a future date or typo.",
+      "Add specific cloud platforms (AWS, Azure, GCP) if used during AI integration or deployment.",
+      "Include testing frameworks like Jest or React Testing Library to strengthen the technical skills section.",
+      "Quantify the 'large-scale applications' mentioned in the Accenture role to provide scale context."
+    ],
+    "headlines": [
+      "Senior Frontend Developer | React.js & AI Integration Expert | 8+ Years Experience",
+      "Lead Frontend Engineer | Scaling E-commerce & EdTech Solutions with React.js",
+      "Senior React Developer | Driving 30% ROI through High-Performance UI/UX Architecture"
+    ]
+  }

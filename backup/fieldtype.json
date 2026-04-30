@@ -1,0 +1,30 @@
+{
+    // ── Primitive types
+    "string_field":   "string",         // names, titles, descriptions
+    "number_field":   0,                // years, counts, percentages
+    "boolean_field":  true,             // flags (is_current, ats_optimized…)
+    "nullable_field": null,             // optional — not yet provided
+    "date_field":     "YYYY-MM",        // ISO month-precision date
+  
+    // ── Array types
+    "string_array":  ["item1","item2"], // skills, keywords, courses
+    "object_array":  [{ "key": "val" }],// experience, education, certs…
+  
+    // ── Enum examples
+    "resume_type":    "tech|non-tech|academic|creative|executive",
+    "employment_type":"Full-time|Part-time|Contract|Freelance|Internship",
+    "proficiency":    "Native|Fluent|Intermediate|Basic",
+    "impact_area":    "revenue|efficiency|engagement|quality|growth",
+    "project_type":   "professional|personal|academic|open-source",
+    "pub_type":       "journal|conference|blog|book|patent",
+    "remote_pref":    "onsite|remote|hybrid",
+  
+    // ── Nested object shape (experience.roles.achievements)
+    "achievement": {
+      "action":      "string",  // action verb (Engineered, Led, Grew…)
+      "task":        "string",  // what you built/did
+      "result":      "string",  // outcome + metric (increased X by Y%)
+      "metric":      "string",  // extracted metric for ATS (e.g. "40%")
+      "impact_area": "string"   // see enum above
+    }
+  }
