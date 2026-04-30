@@ -71,7 +71,7 @@ There is no build step or server required: open the HTML file in a modern browse
 ## File layout
 
 ```
-resume-forge/
+playground/
 ├── README.md
 └── resume-optimizer.html   ← main app
 ```
