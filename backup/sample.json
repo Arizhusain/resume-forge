@@ -1,0 +1,86 @@
+{
+    "name": "Arifhusain Soudagar",
+    "tagline": "Senior Frontend Engineer | React.js Expert | AI Integration Specialist",
+    "contact": "7358236715 • arifhusainsoudagar01@gmail.com • linkedin.com/in/arifhusain-soudagar-b8348a273 • Dharwad, Karnataka",
+    "summary": "Highly motivated <b>Senior Frontend Developer</b> with over <b>8 years of experience</b> in the IT industry, specializing in building scalable, user-centric web applications. Proven expertise in <b>React.js and modern JavaScript ecosystems</b>, with a track record of driving a <b>30% increase in ROI</b> through innovative UI/UX solutions. Expert at integrating <b>AI-driven features</b> and optimizing state management for high-performance enterprise platforms.",
+    "skills": [
+      {
+        "category": "Frontend Development",
+        "items": "React.js, JavaScript (ES6+), HTML5, CSS3, MUI (Material UI), Styled-Components, React Hooks, React-Router"
+      },
+      {
+        "category": "State Management & Logic",
+        "items": "Context API, Redux, Express.js, Django MVT Architecture"
+      },
+      {
+        "category": "Specialized Tech",
+        "items": "Artificial Intelligence (AI) Integration, TTS (Text-to-Speech), AI-Driven Summarization"
+      },
+      {
+        "category": "Tools & Process",
+        "items": "System Design, Flowcharts/Layouts, Technical Documentation, Agile Methodologies"
+      }
+    ],
+    "experience": [
+      {
+        "company": "Cognizant",
+        "roles": [
+          {
+            "title": "Senior Associate (Lead Developer)",
+            "date": "July 2025 – Present | India",
+            "bullets": [
+              "Architecting <b>reusable UI component libraries</b> using React’s component-based architecture to standardize design and reduce development time.",
+              "Spearheading the integration of <b>innovative AI study tools</b> into eTextbooks, enabling <b>AI-driven summaries and practice questions</b> for enhanced student learning.",
+              "Optimizing frontend workflows using <b>MUI (Material UI)</b>, leveraging pre-built components to accelerate feature delivery and maintain UI consistency.",
+              "Directing the creation of <b>technical documentation and system layouts</b>, ensuring code clarity and reducing deployment errors across the project lifecycle.",
+              "Recognized as <b>Employee of the Month</b> for exceeding project milestones and contributing to a <b>30% increase in ROI</b> for key stakeholders."
+            ]
+          },
+          {
+            "title": "Associate - Projects",
+            "date": "February 2022 – July 2025 | Bengaluru, India",
+            "bullets": [
+              "Developed high-performance web applications focusing on <b>state management and rendering efficiency</b>.",
+              "Collaborated with cross-functional teams to translate complex requirements into <b>scalable frontend architectures</b>."
+            ]
+          }
+        ]
+      },
+      {
+        "company": "Accenture",
+        "roles": [
+          {
+            "title": "Software Engineer Analyst",
+            "date": "July 2016 – February 2022 | Bengaluru, India",
+            "bullets": [
+              "Boosted <b>user engagement by 30%</b> through the development of intuitive, responsive web applications using React and modern JavaScript.",
+              "Increased <b>conversion rates by 20%</b> for an e-commerce platform by optimizing React components, forms, and event handling.",
+              "Implemented advanced state management using <b>Context API</b>, significantly enhancing <b>rendering speed and scalability</b> for large-scale client dashboards.",
+              "Utilized <b>Django’s Model-View-Template (MVT)</b> architecture to build maintainable backend-integrated features, improving user retention by 20%.",
+              "Engineered extensible codebases for complex e-commerce projects, ensuring long-term maintainability and ease of feature updates."
+            ]
+          }
+        ]
+      }
+    ],
+    "certifications": [
+      "Pearson+ Hackathon Finalist"
+    ],
+    "education": [
+      {
+        "degree": "BCA, Computer Programming & Specific Applications",
+        "date": "2013 – 2016",
+        "institution": "Karnataka University, Dharwad"
+      }
+    ],
+    "suggestions": [
+      "Add specific testing libraries like Jest or React Testing Library to the skills section.",
+      "Quantify the user base or traffic volume handled during the Accenture e-commerce projects.",
+      "Include any experience with CI/CD pipelines or cloud platforms (AWS/Azure) to strengthen the Lead Developer profile."
+    ],
+    "headlines": [
+      "Senior Frontend Engineer | React.js & AI Integration Specialist",
+      "Lead Developer | 8+ Years Experience in Scalable Web Architectures",
+      "Frontend Specialist | Driving 30% ROI through Modern UI/UX Solutions"
+    ]
+  }

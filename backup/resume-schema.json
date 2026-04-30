@@ -1,0 +1,234 @@
+{
+  // ═══════════════════════════════════════════════════
+  // SECTION 1 — PERSONAL INFORMATION (core)
+  // ═══════════════════════════════════════════════════
+  "meta": {
+    "schema_version": "1.0", // track changes over time
+    "last_updated": "2025-04-30", // ISO date
+    "resume_type": "tech", // "tech" | "non-tech" | "academic" | "creative" | "executive"
+    "target_role": "Senior Frontend Developer",
+    "ats_optimized": true // flag for ATS-safe formatting
+  },
+
+  "personal": {
+    "full_name": "Arifhusain Soudagar",
+    "preferred_name": "Arif", // optional nickname
+    "headline": "Senior Frontend Developer | React.js | 10+ Years",
+    "email": "arif@example.com",
+    "phone": "+91-7358236715",
+    "location": {
+      "city": "Dharwad",
+      "state": "Karnataka",
+      "country": "India",
+      "remote_preference": "hybrid" // "onsite" | "remote" | "hybrid"
+    },
+    "links": {
+      "linkedin": "linkedin.com/in/arif…",
+      "github": "github.com/arif", // tech-specific
+      "portfolio": "arif.dev", // creative / tech
+      "website": null,
+      "behance": null, // design/creative
+      "dribbble": null, // design
+      "medium": null, // writing / thought leadership
+      "twitter_x": null // optional social
+    }
+  },
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 2 — PROFESSIONAL SUMMARY
+  // ═══════════════════════════════════════════════════
+  "summary": {
+    "tagline": "Turning complex problems into shipped products",
+    "body": "Results-driven developer with 10+ years…", // 3-5 sentences
+    "tone": "professional", // "professional" | "academic" | "creative" | "executive"
+    "keywords": ["React.js", "ATS", "frontend", "performance"]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 3 — SKILLS (universal + typed)
+  // ═══════════════════════════════════════════════════
+  "skills": {
+    "technical": {
+      // tech resumes
+      "languages": ["JavaScript", "Python", "TypeScript"],
+      "frameworks": ["React.js", "Node.js", "Express", "Django"],
+      "databases": ["PostgreSQL", "MongoDB", "Redis"],
+      "cloud_devops": ["AWS", "Docker", "GitHub Actions", "CI/CD"],
+      "tools": ["Git", "Figma", "JIRA", "VS Code"],
+      "methodologies": ["Agile", "Scrum", "TDD", "REST"]
+    },
+    "domain": {
+      // non-tech / any field
+      "core": ["Financial Modelling", "Risk Analysis"], // field-specific hard skills
+      "industry": ["FMCG", "Healthcare", "EdTech"], // industry exposure
+      "tools": ["SAP", "Salesforce", "Excel", "Tableau"]
+    },
+    "soft": ["Leadership", "Cross-functional collaboration", "Mentoring"],
+    "languages_spoken": [
+      { "language": "English", "proficiency": "Fluent" },
+      { "language": "Kannada", "proficiency": "Native" }
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 4 — WORK EXPERIENCE
+  // ═══════════════════════════════════════════════════
+  "experience": [
+    {
+      "company": "Cognizant",
+      "company_url": "cognizant.com", // optional
+      "industry": "IT Services",
+      "company_size": "100,000+", // helps context
+      "location": "Bengaluru, India",
+      "employment_type": "Full-time", // "Contract" | "Freelance" | "Part-time"
+      "roles": [
+        {
+          "title": "Senior Associate — Lead Developer",
+          "level": "L5", // internal level if applicable
+          "start_date": "2025-07",
+          "end_date": null, // null = present
+          "is_current": true,
+          "team_size": 8,
+          "reports_to": "Engineering Manager",
+          "direct_reports": 3, // for leadership roles
+          "summary": "Led frontend architecture for enterprise apps…",
+          "achievements": [
+            {
+              "action": "Engineered", // strong verb
+              "task": "reusable React component library using MUI",
+              "result": "reduced dev time by 40%",
+              "metric": "40%", // extracted for ATS scanning
+              "impact_area": "efficiency" // "revenue"|"efficiency"|"engagement"|"quality"
+            }
+          ],
+          "tech_stack": ["React.js", "MUI", "Context API", "REST"] // role-level stack
+        }
+      ]
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 5 — EDUCATION
+  // ═══════════════════════════════════════════════════
+  "education": [
+    {
+      "degree": "Bachelor of Computer Applications",
+      "short": "BCA",
+      "field": "Computer Programming & Applications",
+      "institution": "Karnataka University",
+      "location": "Dharwad, India",
+      "start_year": 2013,
+      "end_year": 2016,
+      "gpa": null, // include if strong (>3.5/4)
+      "honors": null, // "Distinction" | "First Class"
+      "relevant_courses": ["Data Structures", "Web Dev", "DBMS"],
+      "thesis": null // academic resumes
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 6 — PROJECTS
+  // ═══════════════════════════════════════════════════
+  "projects": [
+    {
+      "name": "AI Study Tool — Pearson eTextbooks",
+      "type": "professional", // "professional"|"personal"|"academic"|"open-source"
+      "role": "Lead Developer",
+      "description": "Integrated AI summaries and Q&A into eTextbooks…",
+      "tech_stack": ["React.js", "REST API", "NLP"],
+      "outcomes": ["Improved student retention by 25%"],
+      "url": null,
+      "github_url": null,
+      "year": 2024
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 7 — CERTIFICATIONS & AWARDS
+  // ═══════════════════════════════════════════════════
+  "certifications": [
+    {
+      "name": "AWS Certified Developer – Associate",
+      "issuer": "Amazon Web Services",
+      "issued_date": "2023-09",
+      "expiry_date": "2026-09", // null if no expiry
+      "credential_id": "ABC-123",
+      "url": "credly.com/badges/…"
+    }
+  ],
+  "awards": [
+    {
+      "title": "Employee of the Month",
+      "issuer": "Cognizant",
+      "date": "2024-03",
+      "description": "For 30% ROI uplift across multiple frontend projects"
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 8 — PUBLICATIONS & RESEARCH (academic/non-tech)
+  // ═══════════════════════════════════════════════════
+  "publications": [
+    {
+      "title": "Optimizing React State at Scale",
+      "type": "article", // "journal"|"conference"|"blog"|"book"|"patent"
+      "publisher": "Medium / dev.to",
+      "date": "2024-01",
+      "url": "medium.com/@arif/…",
+      "co_authors": []
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 9 — VOLUNTEER & EXTRA-CURRICULAR
+  // ═══════════════════════════════════════════════════
+  "volunteer": [
+    {
+      "role": "Technical Mentor",
+      "organization": "Local Coding Bootcamp",
+      "start_date": "2022-01",
+      "end_date": null,
+      "description": "Mentored 20+ junior developers on React & JS"
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 10 — OPEN SOURCE & CONTRIBUTIONS (tech)
+  // ═══════════════════════════════════════════════════
+  "open_source": [
+    {
+      "project": "react-query",
+      "contribution": "Fixed pagination edge-case bug",
+      "pr_url": "github.com/…/pull/42",
+      "impact": "Merged into v5 — 2M+ weekly downloads affected"
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 11 — SPEAKING & COMMUNITY
+  // ═══════════════════════════════════════════════════
+  "speaking": [
+    {
+      "event": "ReactConf India 2024",
+      "talk_title": "Micro-frontends at Scale",
+      "date": "2024-11",
+      "type": "conference", // "meetup"|"webinar"|"workshop"|"podcast"
+      "url": "youtube.com/…"
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════
+  // SECTION 12 — ATS & RECRUITER METADATA
+  // ═══════════════════════════════════════════════════
+  "ats_metadata": {
+    "total_yoe": 10, // years of experience (auto-computed)
+    "primary_skill": "React.js",
+    "secondary_skills": ["Node.js", "MUI", "JavaScript"],
+    "industries": ["EdTech", "IT Services", "E-commerce"],
+    "job_levels": ["Mid", "Senior", "Lead"],
+    "salary_expectation": null, // optional; include only if asked
+    "notice_period": "30 days",
+    "willing_to_relocate": true,
+    "visa_status": null // include for international applications
+  }
+}

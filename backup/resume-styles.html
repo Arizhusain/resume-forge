@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeForge — JSON to Resume (styles)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink:#0D1117;
+  --ink-mid:#3D4451;
+  --ink-soft:#6B7385;
+  --ink-faint:#9AA0AE;
+  --rule:#E8EBF2;
+  --surface:#F3F5FA;
+  --card:#FFFFFF;
+  --accent:#4F6EF7;
+  --accent-d:#3B55E0;
+  --accent-pale:#EEF2FF;
+  --gold:#C47B22;
+  --gold-pale:#FEF3C7;
+  --green:#0A7954;
+  --green-pale:#D1FAE5;
+  --red:#C0302E;
+  --red-pale:#FEE2E2;
+  --f-display:'Playfair Display',Georgia,serif;
+  --f-body:'DM Sans',system-ui,sans-serif;
+  --f-mono:'JetBrains Mono',monospace;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.05);
+}
+
+html{scroll-behavior:smooth}
+body{font-family:var(--f-body);background:var(--surface);color:var(--ink-mid);min-height:100vh;overflow-x:hidden;line-height:1.6}
+
+.shell{display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+
+/* ── Left panel ── */
+.left{
+  background:var(--card);border-right:1px solid var(--rule);
+  padding:36px 28px 60px;
+  display:flex;flex-direction:column;gap:24px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+
+.brand{padding-bottom:20px;border-bottom:1px solid var(--rule)}
+.brand-eyebrow{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.brand-name{font-family:var(--f-display);font-size:32px;font-weight:700;color:var(--ink);line-height:1.05;letter-spacing:-0.5px}
+.brand-name span{color:var(--accent)}
+.brand-sub{font-size:12px;color:var(--ink-faint);margin-top:8px;line-height:1.6}
+
+.field-label{font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px}
+
+.api-wrap{position:relative}
+.api-input{width:100%;padding:11px 14px;border:1.5px solid var(--rule);border-radius:10px;font-family:var(--f-mono);font-size:11.5px;color:var(--ink);background:var(--surface);outline:none;transition:border-color .2s,background .2s}
+.api-input:focus{border-color:var(--accent);background:#fff}
+.api-note{font-size:10.5px;color:var(--ink-faint);font-family:var(--f-mono);margin-top:6px;line-height:1.55}
+.json-panel textarea.api-input{min-height:200px;resize:vertical;line-height:1.5;padding-top:12px;font-size:11px;white-space:pre}
+.json-file-row{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.json-file-row input[type=file]{font-size:10px;max-width:100%}
+
+.btn-go{
+  width:100%;padding:13px;background:var(--ink);color:#fff;border:none;border-radius:10px;
+  font-family:var(--f-body);font-size:13px;font-weight:600;letter-spacing:.3px;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-go:hover:not(:disabled){background:var(--accent);box-shadow:0 4px 18px rgba(79,110,247,.3)}
+.btn-go:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Style selector cards ── */
+.style-row{display:flex;flex-direction:column;gap:8px}
+.style-btn{
+  width:100%;padding:12px 14px;
+  border:1.5px solid var(--rule);border-radius:10px;
+  background:var(--surface);color:var(--ink-soft);
+  cursor:pointer;transition:all .18s;text-align:left;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.style-btn:hover{border-color:var(--accent);background:var(--accent-pale)}
+.style-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.style-swatch{width:28px;height:28px;border-radius:6px;flex-shrink:0;margin-top:1px;border:1px solid rgba(0,0,0,.08)}
+.style-btn-text{flex:1}
+.style-btn-title{display:block;font-size:12px;font-weight:600;margin-bottom:2px}
+.style-btn-desc{display:block;font-size:10px;font-weight:400;opacity:.8;line-height:1.45}
+.style-btn.active .style-btn-title,.style-btn.active .style-btn-desc{color:#fff}
+
+/* swatches */
+.swatch-minimal{background:linear-gradient(135deg,#f8f8f8 50%,#e5e5e5 50%)}
+.swatch-standard{background:linear-gradient(135deg,#fff 50%,#4F6EF7 50%)}
+.swatch-exec{background:linear-gradient(135deg,#1a1a2e 50%,#c5a059 50%)}
+
+.err{padding:11px 14px;background:var(--red-pale);border:1px solid #FCA5A5;border-radius:8px;font-size:11.5px;color:var(--red);display:none;line-height:1.5}
+.err.show{display:block}
+
+/* ── Right panel ── */
+.right{padding:40px 44px 80px;min-height:100vh;display:flex;flex-direction:column}
+.output-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--ink-faint)}
+.output-placeholder svg{width:52px;height:52px;opacity:.2;stroke:var(--ink-faint)}
+.output-placeholder p{font-size:13px;text-align:center;max-width:300px;line-height:1.65}
+
+.result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.result-title{font-family:var(--f-display);font-size:21px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:10px}
+.result-badge{font-family:var(--f-body);font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--green-pale);color:var(--green);border:1px solid #6EE7B7}
+.btn-dl{display:flex;align-items:center;gap:7px;padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-family:var(--f-body);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(79,110,247,.25)}
+.btn-dl:hover{background:var(--ink);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.btn-dl:disabled{opacity:.55;cursor:not-allowed}
+
+.resume-wrap{display:none}
+.resume-wrap.show{display:block;animation:slideUp .4s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.sug-wrap{margin-top:28px;background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);display:none}
+.sug-wrap.show{display:block;animation:slideUp .4s ease .1s both}
+.sug-head{padding:14px 20px;border-bottom:1px solid var(--rule);background:var(--gold-pale);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
+.sug-body{padding:16px 20px;display:flex;flex-direction:column}
+.sug-item{padding:9px 0;border-bottom:1px solid var(--rule);font-size:13px;color:var(--ink-mid);line-height:1.6}
+.sug-item:last-child{border-bottom:none;padding-bottom:0}
+.sug-item strong{color:var(--ink)}
+
+/* ══════════════════════════════════════════════════
+   RESUME DOC — SHARED BASE
+══════════════════════════════════════════════════ */
+#resume-doc{
+  --r-ink:#111;
+  --r-body:#374151;
+  --r-muted:#6B7280;
+  --r-faint:#9CA3AF;
+  --r-rule:#E5E7EB;
+  --r-surface:#F9FAFB;
+  --r-accent:#4F6EF7;
+  --r-accent-2:#3B55E0;
+  --r-accent-soft:#EEF2FF;
+  --r-accent-border:#C7D7FD;
+  --r-green:#065F46;
+  --r-green-bg:#D1FAE5;
+  --r-gold:#B45309;
+  --r-font-body:'DM Sans',system-ui,sans-serif;
+  --r-font-display:'Playfair Display',Georgia,serif;
+  --r-name-size:32px;
+  --r-name-weight:700;
+  --r-name-track:-0.3px;
+  --r-inner-pad:44px 52px 52px;
+  --r-doc-radius:16px;
+  --r-doc-shadow:var(--shadow-lg);
+  --r-doc-border:0 solid transparent;
+  --r-topbar-display:block;
+  --r-topbar-h:4px;
+  --r-topbar-bg:#4F6EF7;
+  --r-divider-h:1px;
+  --r-divider-color:#E5E7EB;
+  --r-bullet:'▸';
+  --r-proj-arrow:'→';
+  --r-role-border-w:2px;
+  --r-role-border-style:solid;
+  --r-role-border-color:#E5E7EB;
+  --r-role-pl:14px;
+  --r-sec-rule-h:1px;
+  --r-sec-rule-flex:1;
+  --r-sec-rule-w:auto;
+  --r-link-underline:none;
+  background:#fff;border-radius:var(--r-doc-radius);
+  box-shadow:var(--r-doc-shadow);border:var(--r-doc-border);
+  overflow:hidden;font-family:var(--r-font-body);
+}
+
+/* ══════════════════════════════════════════════════
+   STYLE 1 — MINIMAL (Clean / ATS-Optimized)
+   Pure white. System font. Zero decoration.
+   Black-and-white typographic hierarchy.
+   Trusted by Google, McKinsey recruiters.
+══════════════════════════════════════════════════ */
+#resume-doc.resume-style-simple{
+  --r-ink:#111111;
+  --r-body:#444444;
+  --r-muted:#666666;
+  --r-faint:#999999;
+  --r-rule:#DDDDDD;
+  --r-surface:#F7F7F7;
+  --r-accent:#111111;
+  --r-accent-2:#333333;
+  --r-accent-soft:#F2F2F2;
+  --r-accent-border:#CCCCCC;
+  --r-green:#1a5c3a;
+  --r-green-bg:#E8F5EE;
+  --r-gold:#7a5c00;
+  --r-font-body:'Inter',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --r-font-display:'Inter',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --r-name-size:26px;
+  --r-name-weight:700;
+  --r-name-track:0px;
+  --r-inner-pad:40px 44px 44px;
+  --r-doc-radius:4px;
+  --r-doc-shadow:none;
+  --r-doc-border:1px solid #CCCCCC;
+  --r-topbar-display:none;
+  --r-topbar-h:0;
+  --r-divider-h:1px;
+  --r-divider-color:#CCCCCC;
+  --r-bullet:'•';
+  --r-proj-arrow:'›';
+  --r-role-border-w:0;
+  --r-role-border-style:none;
+  --r-role-border-color:transparent;
+  --r-role-pl:0;
+  --r-link-underline:underline;
+}
+#resume-doc.resume-style-simple .r-sec-head{border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:10px}
+#resume-doc.resume-style-simple .r-sec-rule{display:none}
+#resume-doc.resume-style-simple .r-sec-title{font-size:10px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase}
+#resume-doc.resume-style-simple .r-name{letter-spacing:-0.5px}
+#resume-doc.resume-style-simple .r-tagline{color:#444;font-weight:500}
+#resume-doc.resume-style-simple .r-divider{border-top:1px solid #222;margin:12px 0 0}
+#resume-doc.resume-style-simple .r-company-name{font-size:11.5px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.4px}
+#resume-doc.resume-style-simple .r-contact-item a{color:#111}
+#resume-doc.resume-style-simple .r-contact-item svg{stroke:#555}
+#resume-doc.resume-style-simple .r-tag{background:#F2F2F2;border-color:#DDD;color:#555}
+#resume-doc.resume-style-simple .r-role-badge{background:#EEEEEE;color:#444}
+#resume-doc.resume-style-simple .r-role-badge.current{background:#E8F5EE;color:#1a5c3a}
+#resume-doc.resume-style-simple .r-cert-dot{background:#555}
+#resume-doc.resume-style-simple .r-kw-tag{background:#F0F0F0;border-color:#DDD;color:#333}
+
+/* ══════════════════════════════════════════════════
+   STYLE 2 — STANDARD (Modern / Tech)
+   Clean white + vivid blue accent.
+   Left sidebar accent bar, bold section anchors.
+   Ideal for tech, product, design roles.
+══════════════════════════════════════════════════ */
+#resume-doc.resume-style-standard{
+  --r-ink:#0D1117;
+  --r-body:#374151;
+  --r-muted:#6B7280;
+  --r-faint:#9CA3AF;
+  --r-rule:#E5E7EB;
+  --r-surface:#F3F6FF;
+  --r-accent:#4F6EF7;
+  --r-accent-2:#3B55E0;
+  --r-accent-soft:#EEF2FF;
+  --r-accent-border:#C7D7FD;
+  --r-green:#065F46;
+  --r-green-bg:#D1FAE5;
+  --r-gold:#B45309;
+  --r-font-body:'DM Sans',system-ui,sans-serif;
+  --r-font-display:'Space Grotesk','DM Sans',system-ui,sans-serif;
+  --r-name-size:34px;
+  --r-name-weight:700;
+  --r-name-track:-0.5px;
+  --r-inner-pad:44px 52px 52px;
+  --r-doc-radius:16px;
+  --r-doc-shadow:0 12px 48px rgba(79,110,247,.10),0 2px 8px rgba(0,0,0,.05);
+  --r-doc-border:0 solid transparent;
+  --r-topbar-display:block;
+  --r-topbar-h:4px;
+  --r-topbar-bg:linear-gradient(90deg,#4F6EF7 0%,#818CF8 60%,#C084FC 100%);
+  --r-divider-h:2px;
+  --r-divider-color:#4F6EF7;
+  --r-bullet:'▸';
+  --r-proj-arrow:'→';
+  --r-role-border-w:2px;
+  --r-role-border-style:solid;
+  --r-role-border-color:#C7D7FD;
+  --r-role-pl:14px;
+}
+#resume-doc.resume-style-standard .r-name{font-family:'Space Grotesk',sans-serif;letter-spacing:-1px}
+#resume-doc.resume-style-standard .r-company-name{color:var(--r-accent)}
+#resume-doc.resume-style-standard .r-sec-title{color:var(--r-accent);font-size:9.5px;letter-spacing:2px}
+#resume-doc.resume-style-standard .r-sec-rule{background:linear-gradient(90deg,var(--r-accent-border),transparent);height:1px}
+#resume-doc.resume-style-standard .r-tagline{
+  display:inline-block;background:var(--r-accent-soft);
+  color:var(--r-accent);padding:3px 10px;border-radius:99px;
+  font-size:12px;font-weight:500;margin-bottom:10px;
+}
+#resume-doc.resume-style-standard .r-tag.r-kw-tag{background:#EEF2FF;border-color:#C7D7FD;color:#3B55E0}
+#resume-doc.resume-style-standard .r-project-block{border-left:3px solid var(--r-accent);border-radius:0 8px 8px 0;background:var(--r-surface);border-top:none;border-right:none;border-bottom:none;padding:10px 12px}
+
+/* ══════════════════════════════════════════════════
+   STYLE 3 — EXECUTIVE (Premium / Leadership)
+   Two-column header. Deep navy + warm gold.
+   Serif display name. Full-bleed dark sidebar.
+   For C-suite, directors, senior consultants.
+══════════════════════════════════════════════════ */
+#resume-doc.resume-style-professional{
+  --r-ink:#0f172a;
+  --r-body:#334155;
+  --r-muted:#64748b;
+  --r-faint:#94a3b8;
+  --r-rule:#cbd5e1;
+  --r-surface:#f8fafc;
+  --r-accent:#1e3a5f;
+  --r-accent-2:#0f2844;
+  --r-accent-soft:#eef2f7;
+  --r-accent-border:#94a3b8;
+  --r-green:#0d4f3c;
+  --r-green-bg:#d1fae5;
+  --r-gold:#c5a059;
+  --r-gold-dark:#8a6a2a;
+  --r-font-body:'DM Sans',system-ui,sans-serif;
+  --r-font-display:'Playfair Display','DM Serif Display',Georgia,serif;
+  --r-name-size:38px;
+  --r-name-weight:700;
+  --r-name-track:-0.5px;
+  --r-inner-pad:0;
+  --r-doc-radius:12px;
+  --r-doc-shadow:0 20px 60px rgba(15,40,68,.16),0 4px 12px rgba(0,0,0,.08);
+  --r-doc-border:0 solid transparent;
+  --r-topbar-display:none;
+  --r-divider-h:1px;
+  --r-divider-color:#cbd5e1;
+  --r-bullet:'▪';
+  --r-proj-arrow:'›';
+  --r-role-border-w:2px;
+  --r-role-border-style:solid;
+  --r-role-border-color:#c5a059;
+  --r-role-pl:14px;
+  --r-sec-rule-h:2px;
+  --r-sec-rule-flex:0 0 36px;
+  --r-sec-rule-w:36px;
+}
+
+/* Executive: dark header band */
+#resume-doc.resume-style-professional .r-header{
+  background:linear-gradient(135deg,#0f2844 0%,#1e3a5f 60%,#2a4a72 100%);
+  padding:44px 52px 36px;
+  margin-bottom:0;
+  position:relative;overflow:hidden;
+}
+#resume-doc.resume-style-professional .r-header::after{
+  content:'';position:absolute;right:-60px;top:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(197,160,89,0.08);
+}
+#resume-doc.resume-style-professional .r-header::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#c5a059,#f0d080,#c5a059);
+}
+#resume-doc.resume-style-professional .r-name{
+  color:#fff;font-family:'Playfair Display',Georgia,serif;
+  font-size:40px;letter-spacing:-0.5px;
+  font-style:italic;
+}
+#resume-doc.resume-style-professional .r-tagline{
+  color:#c5a059;font-size:13px;font-weight:500;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:16px;
+  font-family:'DM Sans',sans-serif;font-style:normal;
+}
+#resume-doc.resume-style-professional .r-contact-row{color:rgba(255,255,255,.65)}
+#resume-doc.resume-style-professional .r-contact-item a{color:#c5a059}
+#resume-doc.resume-style-professional .r-contact-item svg{stroke:rgba(255,255,255,.5)}
+#resume-doc.resume-style-professional .r-divider{border-color:rgba(255,255,255,.15)}
+#resume-doc.resume-style-professional .r-inner{padding:36px 52px 52px}
+#resume-doc.resume-style-professional .r-sec-head{margin-bottom:10px}
+#resume-doc.resume-style-professional .r-sec-title{
+  font-size:11px;font-weight:700;letter-spacing:2.5px;
+  color:#0f2844;
+}
+#resume-doc.resume-style-professional .r-sec-rule{
+  background:linear-gradient(90deg,#c5a059,rgba(197,160,89,.2));
+  height:2px;flex:1;
+}
+#resume-doc.resume-style-professional .r-company-name{
+  color:#1e3a5f;font-size:13px;font-weight:700;
+}
+#resume-doc.resume-style-professional .r-role-title{font-weight:700;color:#0f172a}
+#resume-doc.resume-style-professional .r-summary{font-size:11.5px;line-height:1.85;color:#334155}
+#resume-doc.resume-style-professional .r-summary-tagline{
+  color:#1e3a5f;font-family:'Playfair Display',serif;
+  font-size:13px;font-style:italic;font-weight:400;
+}
+#resume-doc.resume-style-professional .r-tag{background:#f1f5f9;border-color:#cbd5e1;color:#64748b}
+#resume-doc.resume-style-professional .r-kw-tag{background:#eef2f7;border-color:#94a3b8;color:#1e3a5f}
+#resume-doc.resume-style-professional .r-project-block{
+  background:linear-gradient(to right,#f8fafc,#fff);
+  border:none;border-left:3px solid #c5a059;border-radius:0 8px 8px 0;
+}
+#resume-doc.resume-style-professional .r-role-badge{background:#eef2f7;color:#1e3a5f}
+#resume-doc.resume-style-professional .r-role-badge.current{background:#d1fae5;color:#0d4f3c}
+#resume-doc.resume-style-professional .r-cert-dot{background:#c5a059}
+#resume-doc.resume-style-professional .r-award-star{color:#c5a059}
+#resume-doc.resume-style-professional .r-vol-org{color:#c5a059}
+#resume-doc.resume-style-professional .r-oss-impact{color:#c5a059}
+
+/* ── Shared resume component styles ── */
+.r-topbar{display:var(--r-topbar-display);height:var(--r-topbar-h);background:var(--r-topbar-bg)}
+.r-inner{padding:var(--r-inner-pad)}
+.r-header{margin-bottom:20px}
+.r-name{font-family:var(--r-font-display);font-size:var(--r-name-size);font-weight:var(--r-name-weight);color:var(--r-ink);letter-spacing:var(--r-name-track);margin-bottom:5px;line-height:1.1}
+.r-tagline{font-size:12.5px;color:var(--r-accent);font-weight:600;margin-bottom:8px;letter-spacing:.2px}
+.r-contact-row{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:10.5px;color:var(--r-muted);line-height:1.8}
+.r-contact-item{display:flex;align-items:center;gap:4px}
+.r-contact-item svg{width:10px;height:10px;stroke:var(--r-accent);flex-shrink:0}
+.r-contact-item a{color:var(--r-accent);text-decoration:var(--r-link-underline)}
+.r-divider{border:none;border-top:var(--r-divider-h) solid var(--r-divider-color);margin:14px 0 0}
+.r-section{margin-top:20px}
+.r-sec-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.r-sec-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--r-ink);white-space:nowrap}
+.r-sec-rule{flex:var(--r-sec-rule-flex);height:var(--r-sec-rule-h);width:var(--r-sec-rule-w);background:var(--r-rule)}
+.r-summary{font-size:11px;color:var(--r-body);line-height:1.8}
+.r-summary b{color:var(--r-ink)}
+.r-summary-tagline{font-size:11px;font-weight:700;color:var(--r-accent);margin-bottom:5px;font-style:italic}
+.r-edu-field{color:var(--r-accent)}
+.r-inline-muted{font-size:9.5px;color:var(--r-faint);margin-bottom:5px}
+.r-inline-role-sum{font-size:10.5px;color:var(--r-muted);font-style:italic;margin-bottom:4px}
+.r-inline-thesis{font-size:10px;color:var(--r-muted);margin-top:4px}
+.r-link-sm{font-size:9.5px;color:var(--r-accent)}
+.r-expiry-warn{color:var(--r-gold)}
+.r-co-meta{font-size:9.5px;color:var(--r-faint);margin-bottom:5px}
+.r-award-desc{font-size:10.5px;color:var(--r-body);margin-top:2px}
+.r-skills-grid{display:flex;flex-direction:column;gap:5px}
+.r-skill-row{display:flex;font-size:10.5px;line-height:1.6;align-items:baseline}
+.r-skill-cat{color:var(--r-ink);font-weight:700;min-width:128px;flex-shrink:0;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase}
+.r-skill-sep{color:var(--r-accent);margin-right:6px;font-weight:700}
+.r-skill-val{color:var(--r-body);font-size:10.5px}
+.r-exp-block{margin-bottom:14px}
+.r-exp-block:last-child{margin-bottom:0}
+.r-company-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+#resume-doc.resume-style-simple .r-company-name{color:var(--r-ink)}
+.r-company-name{font-size:12px;font-weight:700}
+.r-company-industry{font-size:9.5px;color:var(--r-faint);background:var(--r-surface);border:1px solid var(--r-rule);border-radius:4px;padding:2px 7px}
+.r-role-block{padding-left:var(--r-role-pl);border-left:var(--r-role-border-w) var(--r-role-border-style) var(--r-role-border-color);margin-bottom:8px}
+.r-role-block:last-child{margin-bottom:0}
+.r-role-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.r-role-title{font-size:11px;font-weight:700;color:var(--r-ink)}
+.r-role-meta{display:flex;gap:8px;align-items:center}
+.r-role-date{font-size:10px;color:var(--r-faint);font-style:italic}
+.r-role-badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;background:var(--r-accent-soft);color:var(--r-accent);letter-spacing:.3px}
+.r-role-badge.current{background:var(--r-green-bg);color:var(--r-green)}
+.r-bullets{list-style:none;padding:0;margin:0}
+.r-bullets li{font-size:10.5px;color:var(--r-body);line-height:1.7;padding-left:14px;position:relative;margin-bottom:2px}
+.r-bullets li::before{content:var(--r-bullet);position:absolute;left:0;top:1px;color:var(--r-accent);font-size:9px}
+.r-bullets li b{color:var(--r-ink)}
+.r-role-stack{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}
+.r-tag{font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;background:var(--r-surface);border:1px solid var(--r-rule);color:var(--r-muted)}
+.r-tag.r-kw-tag{background:var(--r-accent-soft);border-color:var(--r-accent-border);color:var(--r-accent)}
+.r-tag.r-edu-badge{background:var(--r-accent-soft);color:var(--r-accent);border-color:var(--r-accent-border)}
+.r-edu-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px}
+.r-edu-deg{font-size:11px;font-weight:700;color:var(--r-ink)}
+.r-edu-date{font-size:10px;color:var(--r-faint);font-style:italic}
+.r-edu-sub{font-size:10.5px;color:var(--r-muted);margin-bottom:4px}
+.r-edu-courses{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.r-project-block{margin-bottom:10px;padding:10px 12px;background:var(--r-surface);border-radius:8px;border:1px solid var(--r-rule)}
+.r-project-block:last-child{margin-bottom:0}
+.r-proj-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.r-proj-name{font-size:11px;font-weight:700;color:var(--r-ink)}
+.r-proj-year{font-size:10px;color:var(--r-faint);font-style:italic}
+.r-proj-role{font-size:9.5px;color:var(--r-accent);font-weight:600;margin-bottom:3px}
+.r-proj-desc{font-size:10.5px;color:var(--r-body);line-height:1.65;margin-bottom:5px}
+.r-proj-outcomes{list-style:none;padding:0;margin:0 0 5px}
+.r-proj-outcomes li{font-size:10px;color:var(--r-muted);padding-left:12px;position:relative}
+.r-proj-outcomes li::before{content:var(--r-proj-arrow);position:absolute;left:0;color:var(--r-accent);font-size:9px}
+.r-cert-grid{display:flex;flex-direction:column;gap:7px}
+.r-cert-item{display:flex;align-items:flex-start;gap:10px}
+.r-cert-dot{width:6px;height:6px;border-radius:50%;background:var(--r-accent);flex-shrink:0;margin-top:5px}
+.r-cert-body{flex:1}
+.r-cert-name{font-size:10.5px;font-weight:700;color:var(--r-ink)}
+.r-cert-meta{font-size:10px;color:var(--r-faint)}
+.r-award-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.r-award-item:last-child{margin-bottom:0}
+.r-award-star{color:var(--r-gold);font-size:12px;flex-shrink:0;line-height:1.4}
+.r-award-name{font-size:10.5px;font-weight:700;color:var(--r-ink)}
+.r-award-meta{font-size:10px;color:var(--r-faint)}
+.r-pub-item{margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--r-rule)}
+.r-pub-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.r-pub-title{font-size:10.5px;font-weight:700;color:var(--r-ink);margin-bottom:2px}
+.r-pub-meta{font-size:10px;color:var(--r-faint)}
+.r-vol-item{margin-bottom:7px}
+.r-vol-item:last-child{margin-bottom:0}
+.r-vol-role{font-size:10.5px;font-weight:700;color:var(--r-ink)}
+.r-vol-org{font-size:10px;color:var(--r-accent)}
+.r-vol-desc{font-size:10.5px;color:var(--r-body);margin-top:2px;line-height:1.6}
+.r-oss-item{margin-bottom:6px}
+.r-oss-project{font-size:10.5px;font-weight:700;color:var(--r-ink)}
+.r-oss-contrib{font-size:10.5px;color:var(--r-body);margin-top:1px}
+.r-oss-impact{font-size:10px;color:var(--r-accent);margin-top:1px}
+.r-lang-grid{display:flex;flex-wrap:wrap;gap:8px}
+.r-lang-item{display:flex;flex-direction:column;align-items:center;padding:7px 12px;background:var(--r-surface);border:1px solid var(--r-rule);border-radius:8px;min-width:70px}
+.r-lang-name{font-size:10px;font-weight:700;color:var(--r-ink)}
+.r-lang-level{font-size:9px;color:var(--r-faint);margin-top:2px}
+.r-two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .left{position:static;height:auto;padding:28px 20px 32px}
+  .right{padding:24px 20px 60px}
+  #resume-doc.resume-style-simple{--r-inner-pad:28px 24px 32px}
+  #resume-doc.resume-style-standard{--r-inner-pad:28px 24px 32px}
+  #resume-doc.resume-style-professional .r-header{padding:32px 28px 28px}
+  #resume-doc.resume-style-professional .r-inner{padding:28px 28px 40px}
+  .r-two-col{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="left">
+    <div class="brand">
+      <div class="brand-eyebrow">Local only</div>
+      <div class="brand-name">JSON<span> → Resume</span></div>
+      <div class="brand-sub">Paste structured resume JSON (same shape as ResumeForge export). Pick a template below, then render — everything stays in your browser.</div>
+    </div>
+
+    <div>
+      <div class="field-label">Resume template</div>
+      <div class="style-row" id="style-row">
+        <button type="button" class="style-btn active" data-style="simple" id="style-btn-simple" onclick="setResumeStyle('simple',this)">
+          <div class="style-swatch swatch-minimal"></div>
+          <div class="style-btn-text">
+            <span class="style-btn-title">Minimal</span>
+            <span class="style-btn-desc">Clean, ATS-optimized. No color. Trusted by top recruiters.</span>
+          </div>
+        </button>
+        <button type="button" class="style-btn" data-style="standard" id="style-btn-standard" onclick="setResumeStyle('standard',this)">
+          <div class="style-swatch swatch-standard"></div>
+          <div class="style-btn-text">
+            <span class="style-btn-title">Modern</span>
+            <span class="style-btn-desc">Blue accent, bold hierarchy. Ideal for tech &amp; product roles.</span>
+          </div>
+        </button>
+        <button type="button" class="style-btn" data-style="professional" id="style-btn-professional" onclick="setResumeStyle('professional',this)">
+          <div class="style-swatch swatch-exec"></div>
+          <div class="style-btn-text">
+            <span class="style-btn-title">Executive</span>
+            <span class="style-btn-desc">Navy &amp; gold, serif name, dark header. For senior &amp; leadership roles.</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="field-label">Resume JSON</div>
+      <div class="api-wrap json-panel">
+        <textarea class="api-input" id="json-input" placeholder='Paste JSON: meta, personal, summary, skills, experience, education, …' autocomplete="off"></textarea>
+      </div>
+      <div class="json-file-row">
+        <span style="font-size:10px;color:var(--ink-faint)">Or load file:</span>
+        <input type="file" accept=".json,application/json" id="json-file"/>
+      </div>
+      <div class="api-note">Code fences (```json) are stripped automatically. JSON must be a single object with resume fields (e.g. <strong>personal</strong>, <strong>experience</strong>).</div>
+    </div>
+
+    <button type="button" class="btn-go" id="render-btn">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+      </svg>
+      Render resume
+    </button>
+
+    <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-soft);cursor:pointer;user-select:none">
+      <input type="checkbox" id="auto-render" checked style="accent-color:var(--accent)"/>
+      Update preview while typing (debounced)
+    </label>
+
+    <div class="err" id="err-box"></div>
+  </aside>
+
+  <main class="right" id="right-panel">
+
+    <div class="output-placeholder" id="placeholder">
+      <svg fill="none" stroke-width="1.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p>Paste or load resume JSON on the left, choose a template, then click <strong>Render resume</strong>. Switch templates anytime to compare.</p>
+    </div>
+
+    <div id="result-header" style="display:none">
+      <div class="result-header">
+        <div class="result-title">
+          Resume preview
+          <span class="result-badge">From JSON</span>
+        </div>
+        <button type="button" class="btn-dl" id="dl-btn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="resume-wrap" id="resume-wrap">
+      <div id="resume-doc" class="resume-style-simple">
+        <div class="r-topbar"></div>
+        <div class="r-inner" id="resume-inner"></div>
+      </div>
+    </div>
+
+    <div class="sug-wrap" id="sug-wrap">
+      <div class="sug-head">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        Headlines, suggestions &amp; metadata
+      </div>
+      <div class="sug-body" id="sug-body"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const STYLE_STORAGE_KEY='resume-styles-template';
+let resumeTemplateStyle='simple';
+let cachedResumeData=null;
+
+function setResumeStyle(style,btn){
+  if(style!=='simple'&&style!=='standard'&&style!=='professional') return;
+  resumeTemplateStyle=style;
+  try{ localStorage.setItem(STYLE_STORAGE_KEY,style); }catch(_){}
+  document.querySelectorAll('.style-btn').forEach(b=>{
+    b.classList.toggle('active',b.getAttribute('data-style')===style);
+  });
+  const doc=$('resume-doc');
+  doc.classList.remove('resume-style-simple','resume-style-standard','resume-style-professional');
+  doc.classList.add('resume-style-'+style);
+  if(cachedResumeData) renderResume(cachedResumeData);
+}
+
+function syncResumeDocClass(){
+  const doc=$('resume-doc');
+  doc.classList.remove('resume-style-simple','resume-style-standard','resume-style-professional');
+  doc.classList.add('resume-style-'+resumeTemplateStyle);
+}
+
+(function initResumeTemplate(){
+  try{
+    const s=localStorage.getItem(STYLE_STORAGE_KEY);
+    if(s==='standard'||s==='professional'||s==='simple'){
+      resumeTemplateStyle=s;
+      syncResumeDocClass();
+      document.querySelectorAll('.style-btn').forEach(b=>{
+        b.classList.toggle('active',b.getAttribute('data-style')===s);
+      });
+    }
+  }catch(_){}
+})();
+
+function showErr(m){const e=$('err-box');e.textContent='⚠ '+m;e.classList.add('show');}
+function clearErr(){$('err-box').classList.remove('show')}
+
+function stripCodeFences(s){
+  let t=s.trim();
+  if(/^```/m.test(t)){
+    t=t.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'');
+  }
+  return t.trim();
+}
+
+function parseResumeObject(raw){
+  const t=stripCodeFences(raw);
+  if(t.length<10) throw new Error('JSON is empty.');
+  let parsed;
+  try{ parsed=JSON.parse(t); }
+  catch(err){ throw new Error('Invalid JSON: '+err.message); }
+  if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)) throw new Error('JSON must be a single object.');
+  const ok=('personal'in parsed)||('experience'in parsed)||('summary'in parsed)||('skills'in parsed)||('education'in parsed);
+  if(!ok) throw new Error('JSON must look like resume data (e.g. personal, experience, summary, skills, or education).');
+  return parsed;
+}
+
+function has(v){ return v!==null && v!==undefined && v!=='' && !(Array.isArray(v)&&v.length===0); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(d){ if(!d) return ''; const [y,m]=String(d).split('-'); const ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return m?`${ms[parseInt(m)-1]} ${y}`:y; }
+function tags(arr){ return arr.filter(Boolean).map(t=>`<span class="r-tag">${esc(t)}</span>`).join(''); }
+
+function section(title){
+  return `<div class="r-section"><div class="r-sec-head"><span class="r-sec-title">${esc(title)}</span><div class="r-sec-rule"></div></div>`;
+}
+
+function renderResume(d){
+  syncResumeDocClass();
+  let h='';
+
+  const p=d.personal||{};
+  const loc=p.location||{};
+  const links=p.links||{};
+
+  h+=`<div class="r-header">`;
+  if(has(p.full_name))  h+=`<div class="r-name">${esc(p.full_name)}</div>`;
+  if(has(p.headline))   h+=`<div class="r-tagline">${esc(p.headline)}</div>`;
+
+  const ci=[];
+  if(has(p.email))   ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>${esc(p.email)}</span>`);
+  if(has(p.phone))   ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${esc(p.phone)}</span>`);
+  const locStr=[loc.city,loc.state,loc.country].filter(Boolean).join(', ');
+  if(locStr) ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${esc(locStr)}</span>`);
+  if(has(links.linkedin)) ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg><a href="https://${links.linkedin}" target="_blank" rel="noopener">LinkedIn</a></span>`);
+  if(has(links.github))   ci.push(`<span class="r-contact-item"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg><a href="https://${links.github}" target="_blank" rel="noopener">GitHub</a></span>`);
+  if(has(links.portfolio)) ci.push(`<span class="r-contact-item">🔗<a href="${links.portfolio}" target="_blank" rel="noopener">Portfolio</a></span>`);
+  if(has(links.medium))    ci.push(`<span class="r-contact-item">✍<a href="${links.medium}" target="_blank" rel="noopener">Medium</a></span>`);
+
+  if(ci.length) h+=`<div class="r-contact-row">${ci.join('')}</div>`;
+  h+=`<hr class="r-divider"/></div>`;
+
+  const sm=d.summary||{};
+  if(has(sm.body)||has(sm.tagline)){
+    h+=section('Professional Summary');
+    if(has(sm.tagline)) h+=`<div class="r-summary-tagline">${esc(sm.tagline)}</div>`;
+    if(has(sm.body))    h+=`<div class="r-summary">${sm.body}</div>`;
+    if(has(sm.keywords)&&sm.keywords.length) h+=`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${sm.keywords.map(k=>`<span class="r-tag r-kw-tag">${esc(k)}</span>`).join('')}</div>`;
+  }
+
+  const sk=d.skills||{};
+  const tech=sk.technical||{};
+  const dom=sk.domain||{};
+  const allSkillRows=[];
+  if(has(tech.languages)&&tech.languages.length)    allSkillRows.push(['Languages',    tech.languages.join(', ')]);
+  if(has(tech.frameworks)&&tech.frameworks.length)  allSkillRows.push(['Frameworks',   tech.frameworks.join(', ')]);
+  if(has(tech.databases)&&tech.databases.length)    allSkillRows.push(['Databases',    tech.databases.join(', ')]);
+  if(has(tech.cloud_devops)&&tech.cloud_devops.length) allSkillRows.push(['Cloud / DevOps',tech.cloud_devops.join(', ')]);
+  if(has(tech.tools)&&tech.tools.length)            allSkillRows.push(['Tools',        tech.tools.join(', ')]);
+  if(has(tech.methodologies)&&tech.methodologies.length) allSkillRows.push(['Methodologies',tech.methodologies.join(', ')]);
+  if(has(dom.core)&&dom.core.length)                allSkillRows.push(['Core Skills',  dom.core.join(', ')]);
+  if(has(dom.industry)&&dom.industry.length)        allSkillRows.push(['Industry',     dom.industry.join(', ')]);
+  if(has(dom.tools)&&dom.tools.length)              allSkillRows.push(['Domain Tools', dom.tools.join(', ')]);
+  if(has(sk.soft)&&sk.soft.length)                  allSkillRows.push(['Soft Skills',  sk.soft.join(', ')]);
+
+  if(allSkillRows.length){
+    h+=section('Core Skills');
+    h+='<div class="r-skills-grid">';
+    allSkillRows.forEach(([cat,val])=>{
+      h+=`<div class="r-skill-row"><span class="r-skill-cat">${esc(cat)}</span><span class="r-skill-sep">›</span><span class="r-skill-val">${esc(val)}</span></div>`;
+    });
+    h+='</div>';
+  }
+  if(has(sk.languages_spoken)&&sk.languages_spoken.length){
+    h+=`<div style="margin-top:10px"><div class="r-lang-grid">`;
+    sk.languages_spoken.forEach(l=>{
+      if(has(l.language)) h+=`<div class="r-lang-item"><div class="r-lang-name">${esc(l.language)}</div><div class="r-lang-level">${esc(l.proficiency||'')}</div></div>`;
+    });
+    h+='</div></div>';
+  }
+
+  if(has(d.experience)&&d.experience.length){
+    h+=section('Professional Experience');
+    d.experience.forEach(co=>{
+      if(!has(co.company)) return;
+      h+=`<div class="r-exp-block"><div class="r-company-row"><span class="r-company-name">${esc(co.company)}</span>`;
+      if(has(co.industry)) h+=`<span class="r-company-industry">${esc(co.industry)}</span>`;
+      h+=`</div>`;
+      const roles=co.roles||[];
+      roles.forEach(r=>{
+        h+=`<div class="r-role-block"><div class="r-role-header"><span class="r-role-title">${esc(r.title||'')}</span><div class="r-role-meta">`;
+        const ds=fmtDate(r.start_date), de=r.is_current?'Present':fmtDate(r.end_date);
+        if(ds||de) h+=`<span class="r-role-date">${ds}${ds&&de?' – ':''}${de}</span>`;
+        if(r.is_current) h+=`<span class="r-role-badge current">Current</span>`;
+        else if(has(co.employment_type)) h+=`<span class="r-role-badge">${esc(co.employment_type)}</span>`;
+        h+=`</div></div>`;
+        const meta=[];
+        if(r.team_size>0)      meta.push(`Team of ${r.team_size}`);
+        if(r.direct_reports>0) meta.push(`${r.direct_reports} direct reports`);
+        if(has(co.location))   meta.push(esc(co.location));
+        if(meta.length) h+=`<div class="r-co-meta">${meta.join(' · ')}</div>`;
+        if(has(r.summary)) h+=`<div class="r-inline-role-sum">${esc(r.summary)}</div>`;
+        const ach=r.achievements||[];
+        if(ach.length){
+          h+='<ul class="r-bullets">';
+          ach.forEach(a=>{
+            let bullet=`${esc(a.action||'')} ${esc(a.task||'')}`;
+            if(has(a.result)) bullet+=` — <b>${esc(a.result)}</b>`;
+            else if(has(a.metric)) bullet+=` (<b>${esc(a.metric)}</b>)`;
+            h+=`<li>${bullet}</li>`;
+          });
+          h+='</ul>';
+        }
+        if(has(r.tech_stack)&&r.tech_stack.length) h+=`<div class="r-role-stack">${tags(r.tech_stack)}</div>`;
+        h+='</div>';
+      });
+      h+='</div>';
+    });
+  }
+
+  const hasEdu  = has(d.education)&&d.education.length;
+  const hasCert = has(d.certifications)&&d.certifications.length;
+  const hasAward= has(d.awards)&&d.awards.length;
+
+  if(hasEdu){
+    h+=section('Education');
+    d.education.forEach(e=>{
+      h+=`<div style="margin-bottom:10px">`;
+      h+=`<div class="r-edu-row"><span class="r-edu-deg">${esc(e.degree||'')}${has(e.short)?` <span style="font-weight:400;color:#9AA0AE">(${esc(e.short)})</span>`:''}</span><span class="r-edu-date">${e.start_year||''}${e.end_year?` – ${e.end_year}`:''}</span></div>`;
+      const inst=[e.institution,e.location].filter(Boolean).join(' · ');
+      if(inst) h+=`<div class="r-edu-sub">${esc(inst)}</div>`;
+      if(has(e.field)) h+=`<div class="r-edu-sub r-edu-field">${esc(e.field)}</div>`;
+      const badges=[];
+      if(has(e.gpa))    badges.push(`GPA: ${e.gpa}`);
+      if(has(e.honors)) badges.push(e.honors);
+      if(badges.length) h+=`<div style="margin-top:4px;display:flex;gap:6px">${badges.map(b=>`<span class="r-tag r-edu-badge">${esc(b)}</span>`).join('')}</div>`;
+      if(has(e.relevant_courses)&&e.relevant_courses.length) h+=`<div class="r-edu-courses">${tags(e.relevant_courses)}</div>`;
+      if(has(e.thesis)) h+=`<div class="r-inline-thesis"><b>Thesis:</b> ${esc(e.thesis)}</div>`;
+      h+='</div>';
+    });
+  }
+
+  if(has(d.projects)&&d.projects.length){
+    h+=section('Projects');
+    d.projects.forEach(pr=>{
+      if(!has(pr.name)) return;
+      h+=`<div class="r-project-block"><div class="r-proj-header"><span class="r-proj-name">${esc(pr.name)}</span>`;
+      const pmeta=[];
+      if(has(pr.year)) pmeta.push(String(pr.year));
+      if(has(pr.type)) pmeta.push(pr.type);
+      if(pmeta.length) h+=`<span class="r-proj-year">${esc(pmeta.join(' · '))}</span>`;
+      h+=`</div>`;
+      if(has(pr.role))        h+=`<div class="r-proj-role">${esc(pr.role)}</div>`;
+      if(has(pr.description)) h+=`<div class="r-proj-desc">${esc(pr.description)}</div>`;
+      if(has(pr.outcomes)&&pr.outcomes.length){
+        h+='<ul class="r-proj-outcomes">';
+        pr.outcomes.forEach(o=>{ h+=`<li>${esc(o)}</li>`; });
+        h+='</ul>';
+      }
+      const plinks=[];
+      if(has(pr.url))        plinks.push(`<a href="${pr.url}" target="_blank" rel="noopener" class="r-link-sm">🔗 Live</a>`);
+      if(has(pr.github_url)) plinks.push(`<a href="${pr.github_url}" target="_blank" rel="noopener" class="r-link-sm">⌥ GitHub</a>`);
+      if(plinks.length) h+=`<div style="display:flex;gap:12px;margin-top:4px">${plinks.join('')}</div>`;
+      if(has(pr.tech_stack)&&pr.tech_stack.length) h+=`<div class="r-role-stack" style="margin-top:6px">${tags(pr.tech_stack)}</div>`;
+      h+='</div>';
+    });
+  }
+
+  if(hasCert){
+    h+=section('Certifications');
+    h+='<div class="r-cert-grid">';
+    d.certifications.forEach(c=>{
+      if(!has(c.name)) return;
+      h+=`<div class="r-cert-item"><div class="r-cert-dot"></div><div class="r-cert-body"><div class="r-cert-name">${esc(c.name)}</div>`;
+      const cmeta=[c.issuer, fmtDate(c.issued_date)].filter(Boolean).join(' · ');
+      if(cmeta) h+=`<div class="r-cert-meta">${esc(cmeta)}`;
+      if(has(c.expiry_date)) h+=` <span class="r-expiry-warn">· Expires ${esc(fmtDate(c.expiry_date))}</span>`;
+      if(cmeta) h+=`</div>`;
+      if(has(c.url)) h+=`<a href="${c.url}" target="_blank" rel="noopener" class="r-link-sm">View credential →</a>`;
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  if(hasAward){
+    h+=section('Awards & Recognition');
+    d.awards.forEach(a=>{
+      if(!has(a.title)) return;
+      h+=`<div class="r-award-item"><span class="r-award-star">★</span><div><div class="r-award-name">${esc(a.title)}</div>`;
+      const am=[a.issuer, fmtDate(a.date)].filter(Boolean).join(' · ');
+      if(am) h+=`<div class="r-award-meta">${esc(am)}</div>`;
+      if(has(a.description)) h+=`<div class="r-award-desc">${esc(a.description)}</div>`;
+      h+='</div></div>';
+    });
+  }
+
+  if(has(d.publications)&&d.publications.length){
+    h+=section('Publications');
+    d.publications.forEach(pub=>{
+      if(!has(pub.title)) return;
+      h+=`<div class="r-pub-item"><div class="r-pub-title">${esc(pub.title)}</div>`;
+      const pm=[pub.type, pub.publisher, fmtDate(pub.date)].filter(Boolean).join(' · ');
+      if(pm) h+=`<div class="r-pub-meta">${esc(pm)}</div>`;
+      if(has(pub.co_authors)&&pub.co_authors.length) h+=`<div style="font-size:10px;color:#6B7385">With: ${pub.co_authors.map(esc).join(', ')}</div>`;
+      if(has(pub.url)) h+=`<a href="${pub.url}" target="_blank" rel="noopener" class="r-link-sm">Read →</a>`;
+      h+='</div>';
+    });
+  }
+
+  if(has(d.open_source)&&d.open_source.length){
+    h+=section('Open Source');
+    d.open_source.forEach(os=>{
+      if(!has(os.project)) return;
+      h+=`<div class="r-oss-item"><div class="r-oss-project">${esc(os.project)}</div>`;
+      if(has(os.contribution)) h+=`<div class="r-oss-contrib">${esc(os.contribution)}</div>`;
+      if(has(os.impact))       h+=`<div class="r-oss-impact">${esc(os.impact)}</div>`;
+      if(has(os.pr_url))       h+=`<a href="${os.pr_url}" target="_blank" rel="noopener" class="r-link-sm">View PR →</a>`;
+      h+='</div>';
+    });
+  }
+
+  if(has(d.volunteer)&&d.volunteer.length){
+    h+=section('Volunteer & Community');
+    d.volunteer.forEach(v=>{
+      if(!has(v.role)) return;
+      h+=`<div class="r-vol-item"><div class="r-vol-role">${esc(v.role)}</div>`;
+      const vo=[v.organization, fmtDate(v.start_date), v.end_date?fmtDate(v.end_date):'Present'].filter(Boolean).join(' · ');
+      if(vo) h+=`<div class="r-vol-org">${esc(vo)}</div>`;
+      if(has(v.description)) h+=`<div class="r-vol-desc">${esc(v.description)}</div>`;
+      h+='</div>';
+    });
+  }
+
+  if(has(d.speaking)&&d.speaking.length){
+    h+=section('Speaking & Presentations');
+    d.speaking.forEach(s=>{
+      if(!has(s.event)) return;
+      h+=`<div class="r-vol-item"><div class="r-vol-role">${esc(s.talk_title||s.event)}</div>`;
+      const sm=[s.event, s.type, fmtDate(s.date)].filter(Boolean).join(' · ');
+      if(sm) h+=`<div class="r-vol-org">${esc(sm)}</div>`;
+      if(has(s.url)) h+=`<a href="${s.url}" target="_blank" rel="noopener" class="r-link-sm">Watch →</a>`;
+      h+='</div>';
+    });
+  }
+
+  $('resume-inner').innerHTML=h;
+
+  const hasSug=(has(d.suggestions)&&d.suggestions.length)||(has(d.headlines)&&d.headlines.length);
+  if(hasSug){
+    let sh='';
+    if(has(d.headlines)&&d.headlines.length){
+      sh+=`<div class="sug-item"><strong>Tailored resume headlines</strong></div>`;
+      d.headlines.forEach(hl=>{ sh+=`<div class="sug-item">&rsaquo; ${esc(hl)}</div>`; });
+    }
+    if(has(d.suggestions)&&d.suggestions.length){
+      sh+=`<div class="sug-item" style="padding-top:12px"><strong>Improvement suggestions</strong></div>`;
+      d.suggestions.forEach(s=>{ sh+=`<div class="sug-item">&rsaquo; ${esc(s)}</div>`; });
+    }
+    if(has(d.ats_metadata)){
+      const m=d.ats_metadata;
+      const bits=[];
+      if(m.total_yoe>0) bits.push(`${m.total_yoe} YoE`);
+      if(has(m.primary_skill)) bits.push(`Primary: ${m.primary_skill}`);
+      if(has(m.notice_period)) bits.push(`Notice: ${m.notice_period}`);
+      if(bits.length) sh+=`<div class="sug-item" style="padding-top:12px"><strong>ATS metadata</strong> &nbsp; <span style="font-size:12px;color:#6B7385">${bits.map(esc).join(' · ')}</span></div>`;
+      if(has(m.secondary_skills)&&m.secondary_skills.length) sh+=`<div class="sug-item">&rsaquo; Secondary skills: ${m.secondary_skills.map(esc).join(', ')}</div>`;
+      if(has(m.industries)&&m.industries.length) sh+=`<div class="sug-item">&rsaquo; Industries: ${m.industries.map(esc).join(', ')}</div>`;
+    }
+    $('sug-body').innerHTML=sh;
+    $('sug-wrap').classList.add('show');
+  } else {
+    $('sug-wrap').classList.remove('show');
+    $('sug-body').innerHTML='';
+  }
+
+  cachedResumeData=d;
+}
+
+function showOutput(){
+  $('placeholder').style.display='none';
+  $('result-header').style.display='block';
+  $('resume-wrap').classList.add('show');
+  $('right-panel').scrollTo({top:0,behavior:'smooth'});
+}
+
+function runRender(){
+  clearErr();
+  const raw=$('json-input').value.trim();
+  if(raw.length<20){ showErr('Paste resume JSON first.'); return; }
+  try{
+    const data=parseResumeObject(raw);
+    renderResume(data);
+    showOutput();
+  }catch(e){
+    cachedResumeData=null;
+    showErr(e.message);
+    $('placeholder').style.display='flex';
+    $('result-header').style.display='none';
+    $('resume-wrap').classList.remove('show');
+    $('sug-wrap').classList.remove('show');
+  }
+}
+
+let debounceTimer=null;
+function scheduleRender(){
+  if(!$('auto-render').checked) return;
+  clearTimeout(debounceTimer);
+  debounceTimer=setTimeout(()=>{
+    const raw=$('json-input').value.trim();
+    if(raw.length<20) return;
+    try{
+      const data=parseResumeObject(raw);
+      clearErr();
+      renderResume(data);
+      showOutput();
+    }catch(_){ /* still typing */ }
+  },450);
+}
+
+$('render-btn').addEventListener('click',runRender);
+$('json-input').addEventListener('input',scheduleRender);
+
+$('json-file').addEventListener('change',function(){
+  const f=this.files&&this.files[0];
+  if(!f) return;
+  const ok=f.name.toLowerCase().endsWith('.json')||f.type==='application/json'||f.type==='text/json'||f.type==='';
+  if(!ok){ showErr('Please choose a .json file.'); this.value=''; return; }
+  const r=new FileReader();
+  r.onload=e=>{
+    $('json-input').value=e.target.result||'';
+    clearErr();
+    runRender();
+  };
+  r.onerror=()=>showErr('Could not read JSON file.');
+  r.readAsText(f);
+  this.value='';
+});
+
+$('dl-btn').addEventListener('click',async function downloadPDF(){
+  const btn=this;
+  if(!$('resume-wrap').classList.contains('show')) return;
+  btn.disabled=true; const prev=btn.innerHTML; btn.textContent='Generating…';
+  try{
+    const {jsPDF}=window.jspdf;
+    const el=$('resume-doc');
+    const canvas=await html2canvas(el,{scale:2.5,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    const img=canvas.toDataURL('image/png');
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pW=pdf.internal.pageSize.getWidth();
+    const pH=pdf.internal.pageSize.getHeight();
+    const iH=(canvas.height*pW)/canvas.width;
+    let y=0;
+    while(y<iH){if(y>0)pdf.addPage();pdf.addImage(img,'PNG',0,-y,pW,iH);y+=pH;}
+    const name=(document.querySelector('.r-name')?.textContent||'Resume').replace(/\s+/g,'_');
+    pdf.save(`${name}.pdf`);
+  }catch(e){ showErr('PDF download failed: '+e.message); }
+  btn.disabled=false;
+  btn.innerHTML=prev;
+});
+</script>
+</body>
+</html>
